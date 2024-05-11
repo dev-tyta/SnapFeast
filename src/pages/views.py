@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.views.generic import TemplateView
+
 
 # Create your views here.
-def welcomeView(request):
-    return HttpResponse("Welcome to SnapFeast")
+class welcomeView(TemplateView):
+    template_name = 'welcome.html'
 
-def loginView(request):
-    return HttpResponse("Login Page")
+class loginView(TemplateView):
+    template_name = "login.html"
