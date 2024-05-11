@@ -1,12 +1,14 @@
 <!-- templates/login.html -->
+{% extends "base.html" %}
 
+{% block content %}
 <title>Login</title>
 
 <div class="container">
     <div class="row">
         <div class="col-md-12">
             <h1>Login</h1>
-            <form action="/login" method="post">
+            <form action="login/" method="post">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" class="form-control" id="email" name="email" required>  
@@ -20,3 +22,4 @@
         </div>
     </div>
 </div>
+{% endblock content%}
