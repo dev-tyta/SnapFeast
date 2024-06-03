@@ -1,5 +1,7 @@
-keras_vggface>=0.6.0
-keras.util
-tensorflow
-keras.applications
+git+https://github.com/rcmalli/keras-vggface.git
+keras.utils
+mtcnn
+keras==2.9.0
+tensorflow==2.9.0
+keras_applications
 django
