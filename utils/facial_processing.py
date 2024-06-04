@@ -2,13 +2,11 @@ from PIL import Image
 import numpy as np
 import os 
 import json
-from scipy.spatial.distance import cosine
 from mtcnn.mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
-import matplotlib.pyplot as plt
 from PIL import Image
-from sklearn.metrics.pairwise import cosine_similarity
+
 
 
 class FacialProcessing():
