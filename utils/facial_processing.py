@@ -1,5 +1,7 @@
 from PIL import Image
 import numpy as np
+import os 
+import json
 from scipy.spatial.distance import cosine
 from mtcnn.mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
@@ -10,8 +12,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class FacialProcessing():
-    def __init__(self, img_path, required_size=(224,224)):
+    def __init__(self, img_path, file_directory, required_size=(224,224)):
         self.face_array = None
+        self.file_directory = file_directory
         self.image_path = img_path
         self.img_size = required_size
         self.max_similarity = 0
@@ -58,4 +61,19 @@ class FacialProcessing():
         else: 
             return None
         
-    
+    def process_user_images(self, file_directory):
+        embeddings_dict = {}
+        
+        for filename in os.listdir(file_directory):
+            path = os.path.join(file_directory, filename)
+            face = self.face_extract(path)
+            if face is not None:
+                extracted_embedding = self.extract_embeddings(face)
+                embeddings_dict[filename] = extracted_embedding.tolist()
+            else:
+                return None
+            
+        with open("embeddings.json", "w") as json_file:
+            json.dump(embeddings_dict, json_file)
+
+        print("Completed Facial Embeddings extraction. New Embeddings saved to 'embeddings.json")
