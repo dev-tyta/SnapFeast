@@ -14,6 +14,8 @@ class FacialProcessing():
         self.face_array = None
         self.image_path = img_path
         self.img_size = required_size
+        self.max_similarity = 0
+        self.identity = None
         self.model = VGGFace(model="resnet50", include_top=False,
                              pooling="avg")
 
@@ -56,7 +58,4 @@ class FacialProcessing():
         else: 
             return None
         
-    def match_faces(self, new_embeddings, saved_embeddings):
-        max_similarity = 0
-        for filename, stored_embeddings in saved_embeddings.items():
-            similarity = cosine_similarity(new_embeddings.reshape()
+    
