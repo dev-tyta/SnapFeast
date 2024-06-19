@@ -15,4 +15,9 @@ class CustomerAdmin(admin.ModelAdmin):
     add_form = CustomerCreationForm
     form = CustomerChangeForm
     model = Customer
-    
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {'fields': ('name', 'email', 'phone', 'profile_pic')}),
+    )
+    added_fieldsets = UserAdmin.add_fieldsets + (None, {'fields': ('name', 'email', 'phone', 'profile_pic')})
+
+admin.site.register(Customer, CustomerAdmin)
