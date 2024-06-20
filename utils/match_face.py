@@ -1,14 +1,14 @@
 import json
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from facial_processing import FacialProcessing
 
 
 
 class FaceMatch:
     def __init__(self, image_path, embeddings_json):
         self.image_path = image_path
-        self.max_similarity = 0
-        self.identity = None
+        self.face = FacialProcessing()
         self.json_file = embeddings_json 
 
 
@@ -23,13 +23,29 @@ class FaceMatch:
 
 
     def match_faces(self, new_embeddings, saved_embeddings):
-            for filename, stored_embeddings in saved_embeddings.items():
-                similarity = cosine_similarity(new_embeddings.reshape(1, -1), stored_embeddings.reshape(1,-1))
-                if similarity > self.max_similarity:
-                    self.max_similarity = similarity
-                    self.identity = filename
-            
-            return self.identity, self.max_similarity
+        max_similarity = 0
+        identity = None
 
-    def new_face_matching(self):
+        for filename, stored_embeddings in saved_embeddings.items():
+            similarity = cosine_similarity(new_embeddings.reshape(1, -1), stored_embeddings.reshape(1,-1))
+            if similarity > max_similarity:
+                max_similarity = similarity
+                identity = filename
+        
+        return identity, max_similarity
+
+    def new_face_matching(self, image_path, ):
         embeddings = self.load_embeddings()
+        new_face = self.face.face_extract(image_path)
+        if new_face is not None:
+            new_embeddings = self.face.extract_embeddings(new_face)
+            embeddings_dic = self.load_embeddings(self.json_file)
+
+            identity, similarity = self.match_faces(new_embeddings, embeddings_dic)
+            if identity:
+                return identity, similarity
+            else:
+                return None, 0.0
+        else:
+            return None, 0.0
+        

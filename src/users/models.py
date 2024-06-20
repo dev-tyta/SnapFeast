@@ -21,9 +21,10 @@ cloudinary.config(
 class Customer(AbstractUser):
     name = models.CharField(max_length=200)
     mail = models.EmailField(max_length=200)
-    age = models.IntergerField(null=True, blank=True)
-    profile_pic = CloudinaryField(upload_to='data', null=True, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    profile_pic = CloudinaryField('data', null=True, blank=True)
     preferences = models.JSONField(null=True, blank=True)
+    embeddings = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name

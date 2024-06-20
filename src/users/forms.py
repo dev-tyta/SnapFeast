@@ -13,12 +13,3 @@ class UserUpdateForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = Customer
         fields = UserChangeForm.Meta.fields + ('name', 'mail', 'age', 'profile_pic', 'preferences')
-
-class UserLoginForm(AuthenticationForm):
-    class Meta:
-        fields = ('username', 'password')
-
-    def __init__(self, *args, **kwargs):
-        super(UserLoginForm, self).__init__( *args, **kwargs)
-        self.fields['username'].label = 'Email'
-        self.fields['password'].label = 'Password'
