@@ -7,12 +7,12 @@ from .models import Customer
 class UserSignUpForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = Customer
-        fields = UserCreationForm.Meta.fields + ('name', 'email', 'age', 'profile_pic', 'preferences')   
+        fields = UserCreationForm.Meta.fields + ('name', 'mail', 'age', 'profile_pic', 'preferences')   
 
 class UserUpdateForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = Customer
-        fields = UserChangeForm.Meta.fields + ('name', 'email', 'age', 'profile_pic', 'preferences')
+        fields = UserChangeForm.Meta.fields + ('name', 'mail', 'age', 'profile_pic', 'preferences')
 
 class UserLoginForm(AuthenticationForm):
     class Meta:
