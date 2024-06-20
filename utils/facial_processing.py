@@ -1,11 +1,11 @@
 from PIL import Image
 import numpy as np
-import os 
-import json
+import requests
+from io import BytesIO
 from mtcnn.mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
-from PIL import Image
+from ..src.users.models import UserEmbeddings
 
 
 
@@ -17,10 +17,11 @@ class FacialProcessing():
                              pooling="avg")
 
 
-    def face_extract(self, image_path):
-        self.img = Image.open(self.image_path)
+    def face_extract(self, image_url):
+        response = requests.get(image_url)
+        self.img = Image.open(BytesIO(response.content))
         self.img = self.img.convert("RGB")
-        pixel = (self.img)
+        pixel = np.asarray(self.img)
         
         faces = self.mtcnn_detector.detect_faces(pixel)
 
@@ -53,17 +54,21 @@ class FacialProcessing():
         else: 
             return None
         
-    def process_user_images(self, file_directory):
-        embeddings_dict = {}
+    def save_embeddings_to_db(self, user_id, embeddings):
+        user_embeddings, created = UserEmbeddings.objects.update_or_create(user_id=user_id,
+                                                                        defaults={"embeddings": embeddings.tolist()})
+
+        return created
         
-        for filename in os.listdir(file_directory):
-            path = os.path.join(file_directory, filename)
-            face = self.face_extract(path)
-            if face is not None:
-                extracted_embedding = self.extract_embeddings(face)
-                embeddings_dict[filename] = extracted_embedding.tolist()
+
+    def process_user_images(self, image_urls, user_id):
+        for image_url in image_urls:
+            face_array = self.face_extract(image_url)
+            if face_array is not None:
+                embeddings = self.extract_embeddings(face_array)
+                if embeddings is not None:
+                    self.save_embeddings_to_db(user_id, embeddings)
+                else:
+                    print(f"Embeddings cannot be extracted from the image at {image_url}")
             else:
-                return None
-            
-        for filename, embedding in embeddings_dict.items():
-             
+                print(f"Face cannot be detected from the image at {image_url}")           

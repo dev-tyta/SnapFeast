@@ -12,14 +12,12 @@ class FaceMatch:
         self.json_file = embeddings_json 
 
 
-    def load_embeddings(self, embeddings_file):
-        with open(embeddings_file, "r") as file:
-            embeddings_dict = json.load(file)
-
-        for key in embeddings_dict:
-            embeddings_dict[key] = np.asarray(embeddings_dict[key])
-
-        return embeddings_dict
+    def load_embeddings_from_db(self, user_id):
+        try:
+            user_embedding = UserEmbedding.objects.get(user__id=user_id)
+            return np.array(user_embedding.embeddings)
+        except UserEmbedding.DoesNotExist:
+            return None
 
 
     def match_faces(self, new_embeddings, saved_embeddings):

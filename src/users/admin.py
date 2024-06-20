@@ -1,25 +1,44 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Customer
-from .forms import CustomerCreationForm, CustomerChangeForm
+from .models import UserProfile, UserImage, UserEmbeddings
+from .forms import UserCreationForm, UserChangeForm
 
 # Register your models here.
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ['name',
-                    'email',
-                    'phone',
-                    'profile_pic',
-                    ]
-    add_form = CustomerCreationForm
-    form = CustomerChangeForm
-    model = Customer
+class UserProfileAdmin(UserAdmin):
+    model = UserProfile
+    add_form = UserCreationForm
+    form = UserChangeForm
+    list_display = ['first_name', 'last_name', 'mail', 'age']
     fieldsets = UserAdmin.fieldsets + (
         (None, {
-            'fields': ('username', 'email')}
+            'fields': ('age', 'preferences')
+        }
         )
     )
-    
-    added_fieldsets = UserAdmin.add_fieldsets + (None, {'fields': ('name', 'email', 'phone', 'profile_pic')})
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields':('age', 'preferences')
+                }
+         )
+    )
 
-admin.site.register(Customer, CustomerAdmin)
+admin.site.register(UserProfile, UserProfileAdmin)
+
+
+class UserImageAdmin(admin.ModelAdmin):
+    list_display = ['user', 'image']
+    list_filter = ['user']
+    search_fields = ['user__first_name', 'user__last_name']
+
+admin.site.register(UserImage, UserImageAdmin)
+
+
+class UserEmbeddingsAdmin(admin.ModelAdmin):
+    list_display = ['user', 'embeddings']
+    list_filter = ['user']
+    search_fields = ['user__first_name', 'user__last_name']
+
+    def embeddings_info(self, obj):
+        return "Available" if obj.embeddings else "Not Available"
+
+admin.site.register(UserEmbeddings, UserEmbeddingsAdmin)

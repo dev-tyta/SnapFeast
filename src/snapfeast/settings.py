@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-AUTH_USER_MODEL = 'users.Customer'
+AUTH_USER_MODEL = 'users.UserProfile'
 
 AUTHENTICATION_BACKENDS = ['users.backend.EmailBackend']
 
