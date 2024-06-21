@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .models import UserProfile, UserImage, UserEmbeddings
-from .forms import UserSignUpForm, UserUpdateForm, UserImage
+from .forms import UserSignUpForm, UserUpdateForm, ImageUploadForm
 
 
 # Register your models here.
@@ -22,7 +22,7 @@ admin.site.register(UserProfile, UserProfileAdmin)
 
 
 class UserImageAdmin(admin.ModelAdmin):
-    form= UserImage
+    form= ImageUploadForm
     list_display = ['user', 'image']
     list_filter = ['user__first_name', 'user__last_name']
     search_fields = ['user__first_name', 'user__last_name']

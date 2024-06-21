@@ -5,7 +5,7 @@ from io import BytesIO
 from mtcnn.mtcnn import MTCNN
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
-from ..src.users.models import UserEmbeddings
+from src.users.models import UserEmbeddings
 
 
 

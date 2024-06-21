@@ -7,12 +7,12 @@ from .models import UserProfile, UserImage
 class UserSignUpForm(UserCreationForm):
     class Meta:
         model = UserProfile
-        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password')  # Explicitly define all fields
+        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password')  
 
 class UserUpdateForm(UserChangeForm):
     class Meta:
         model = UserProfile
-        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password')  # Explicitly define all fields
+        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password') 
 
 
 class EmailLoginForm(AuthenticationForm):

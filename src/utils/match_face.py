@@ -1,8 +1,8 @@
 import json
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from facial_processing import FacialProcessing
-from ..src.users.models import UserEmbeddings
+from src.utils.facial_processing import FacialProcessing
+from src.users.models import UserEmbeddings
 
 
 
