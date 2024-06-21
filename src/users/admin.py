@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import UserProfile, UserImage, UserEmbeddings
 from .forms import UserSignUpForm, UserUpdateForm, UserImage
 
+
 # Register your models here.
 class UserProfileAdmin(UserAdmin):
     model = UserProfile

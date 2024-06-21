@@ -5,18 +5,18 @@ from .models import UserProfile, UserImage
 
 
 class UserSignUpForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
+    class Meta:
         model = UserProfile
-        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'mail', 'age', 'preferences', 'password')   
+        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password')  # Explicitly define all fields
 
 class UserUpdateForm(UserChangeForm):
-    class Meta(UserChangeForm.Meta):
+    class Meta:
         model = UserProfile
-        fields = UserChangeForm.Meta.fields + ('first_name', 'last_name', 'mail', 'age', 'preferences', 'password')
+        fields = ('username', 'first_name', 'last_name', 'mail', 'age', 'preferences', 'password')  # Explicitly define all fields
 
 
 class EmailLoginForm(AuthenticationForm):
-    username = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={'autofocus': True}))
+    mail = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={'autofocus': True}))
 
 
 class ImageUploadForm(forms.ModelForm):

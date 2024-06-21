@@ -37,7 +37,7 @@ class UserMailLoginAPIView(APIView):
     def post(self, request, *args, **kwargs):
         form = EmailLoginForm(request.data)
         if form.is_valid():
-            mail = form.cleaned_data['username']
+            mail = form.cleaned_data['mail']
             password = form.cleaned_data['password']
             user = authenticate(request, mail=mail, password=password)
             if user is not None:
@@ -60,19 +60,23 @@ class UserProfileUpdateAPIView(APIView):
             return Response({'status': 'Success', 'message': 'User profile updated successfully'}, status=status.HTTP_200_OK)
         else:
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class FacialRecognitionLoginAPIView(APIView):
     def post(self, request):
         image_data = request.data.get("image")
         if image_data:
-            format, imgstr = image_data.split(';base64,')
-            ext = format.split('/')[-1]
-            image_file = ContentFile(b64decode(imgstr), name='temp.' + ext)
+            try:
+                format, imgstr = image_data.split(';base64,')
+                ext = format.split('/')[-1]
+                image_file = ContentFile(b64decode(imgstr), name='temp.' + ext)
 
-            match_face = FaceMatch(image_file=image_file) 
-            result = match_face.new_face_matching()
+                match_face = FaceMatch(image_file=image_file) 
+                result = match_face.new_face_matching()
 
-            return Response(result)
+                return Response(result)
+            except ValueError:
+                return Response({'status': 'Error', 'message': 'Image data format error'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'status': 'error', 'message': 'No image data found'}, status=status.HTTP_400_BAD_REQUEST)
         

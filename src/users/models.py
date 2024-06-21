@@ -25,7 +25,7 @@ class UserProfile(AbstractUser):
     mail = models.EmailField(max_length=200, unique=True)
     age = models.IntegerField(null=True, blank=True)
     preferences = models.JSONField(null=True, blank=True)
-    embeddings = ArrayField(null=True, blank=True)
+    embeddings = ArrayField(models.FloatField(), null=True, blank=True)
 
     def __str__(self):
         return self.name
