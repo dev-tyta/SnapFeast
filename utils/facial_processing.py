@@ -62,13 +62,23 @@ class FacialProcessing():
         
 
     def process_user_images(self, image_urls, user_id):
+        results = []
         for image_url in image_urls:
-            face_array = self.face_extract(image_url)
-            if face_array is not None:
-                embeddings = self.extract_embeddings(face_array)
-                if embeddings is not None:
-                    self.save_embeddings_to_db(user_id, embeddings)
+            try:
+                face_array = self.face_extract(image_url)
+                if face_array is not None:
+                    embeddings = self.extract_embeddings(face_array)
+                    if embeddings is not None:
+                        created = self.save_embeddings_to_db(user_id, embeddings)
+                        if created:
+                            results.append({'image': image_url, 'status': 'success', 'message': 'Embeddings saved successfully'})
+                        else:
+                            results.append({'image': image_url, 'status': 'error', 'message': 'Failed to save embeddings'})
+                    else:
+                        results.append({'image': image_url, 'status': 'error', 'message': 'Embeddings cannot be extracted'})
                 else:
-                    print(f"Embeddings cannot be extracted from the image at {image_url}")
-            else:
-                print(f"Face cannot be detected from the image at {image_url}")           
+                    results.append({'image': image_url, 'status': 'error', 'message': 'No face detected in the image'})
+            except Exception as e:
+                results.append({'image': image_url, 'status': 'error', 'message': f'Processing failed: {str(e)}'})
+
+        return results

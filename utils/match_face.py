@@ -2,21 +2,22 @@ import json
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from facial_processing import FacialProcessing
+from ..src.users.models import UserEmbeddings
 
 
 
 class FaceMatch:
-    def __init__(self, image_path, embeddings_json):
-        self.image_path = image_path
-        self.face = FacialProcessing()
-        self.json_file = embeddings_json 
+    def __init__(self, image_file):
+        self.image_file = image_file
+        self.face = FacialProcessing() 
 
 
-    def load_embeddings_from_db(self, user_id):
+    def load_embeddings_from_db(self):
         try:
-            user_embedding = UserEmbedding.objects.get(user__id=user_id)
-            return np.array(user_embedding.embeddings)
-        except UserEmbedding.DoesNotExist:
+            user_embeddings = UserEmbeddings.objects.all()
+            embeddings_dict = {ue.user.id: np.array(ue.embeddings) for ue in user_embeddings}
+            return embeddings_dict
+        except UserEmbeddings.DoesNotExist:
             return None
 
 
@@ -25,25 +26,26 @@ class FaceMatch:
         identity = None
 
         for filename, stored_embeddings in saved_embeddings.items():
-            similarity = cosine_similarity(new_embeddings.reshape(1, -1), stored_embeddings.reshape(1,-1))
+            similarity = cosine_similarity(new_embeddings.reshape(1, -1), stored_embeddings.reshape(1,-1))[0][0]
             if similarity > max_similarity:
                 max_similarity = similarity
-                identity = filename
+                identity = user_id
         
         return identity, max_similarity
 
-    def new_face_matching(self, image_path, ):
-        embeddings = self.load_embeddings()
-        new_face = self.face.face_extract(image_path)
+    def new_face_matching(self):
+        new_face = self.face.face_extract(self.image_file)
         if new_face is not None:
             new_embeddings = self.face.extract_embeddings(new_face)
-            embeddings_dic = self.load_embeddings(self.json_file)
+            embeddings_dic = self.load_embeddings_from_db()
 
-            identity, similarity = self.match_faces(new_embeddings, embeddings_dic)
-            if identity:
-                return identity, similarity
+            if embeddings_dic:
+                identity, similarity = self.match_faces(new_embeddings, embeddings_dic)
+                if identity:
+                    return {'status': 'Success', 'message':'Match Found', 'user_id':identity, 'similarity':similarity}
+                else:
+                        return {'status': 'error', 'message': 'No matching face found'}
             else:
-                return None, 0.0
+                return {'status': 'error', 'message': 'No embeddings available'}
         else:
-            return None, 0.0
-        
+            return {'status': 'error', 'message': 'No face detected in the image'}
