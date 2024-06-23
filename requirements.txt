@@ -1,9 +1,9 @@
-git+https://github.com/rcmalli/keras-vggface.git
-keras.utils
-mtcnn
-keras==2.9.0
-tensorflow==2.9.0
-keras_applications
+facenet_pytorch
 django
 djangorestframework
-
+dj-database-url==2.1.0
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
+wheel==0.38.1
+whitenoise==6.6.0
+python-dotenv==1.0.1

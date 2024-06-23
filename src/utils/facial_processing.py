@@ -29,7 +29,7 @@ class FacialProcessing():
         else:
             return None
 
-    def extract_embeddings(face_array):
+    def extract_embeddings(self, face_array):
         if face_array is not None:
             face_tensor = torch.tensor(face_array).unsqueeze(0)  # Add batch dimension
             with torch.no_grad():

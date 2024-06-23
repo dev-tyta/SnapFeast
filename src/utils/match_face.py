@@ -25,7 +25,7 @@ class FaceMatch:
         max_similarity = 0
         identity = None
 
-        for filename, stored_embeddings in saved_embeddings.items():
+        for user_id, stored_embeddings in saved_embeddings.items():
             similarity = cosine_similarity(new_embeddings.reshape(1, -1), stored_embeddings.reshape(1,-1))[0][0]
             if similarity > max_similarity:
                 max_similarity = similarity
