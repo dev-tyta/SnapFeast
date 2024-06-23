@@ -2,55 +2,40 @@ from PIL import Image
 import numpy as np
 import requests
 from io import BytesIO
-from mtcnn.mtcnn import MTCNN
-from keras_vggface.vggface import VGGFace
-from keras_vggface.utils import preprocess_input
+import torch
+from facenet_pytorch import InceptionResnetV1, MTCNN as FacenetMTCNN
 from src.users.models import UserEmbeddings
 
 
 
 class FacialProcessing():
-    def __init__(self, required_size=(224,224)):
+    def __init__(self, required_size=(160,160)):
         self.img_size = required_size
-        self.mtcnn_detector = MTCNN()
-        self.model = VGGFace(model="resnet50", include_top=False,
-                             pooling="avg")
+        self.mtcnn_detector = FacenetMTCNN(image_size=self.img_size[0], thresholds=[0.6, 0.7, 0.7])
+        self.model = InceptionResnetV1(pretrained='vggface2').eval()
 
 
     def face_extract(self, image_url):
         response = requests.get(image_url)
         self.img = Image.open(BytesIO(response.content))
         self.img = self.img.convert("RGB")
-        pixel = np.asarray(self.img)
         
-        faces = self.mtcnn_detector.detect_faces(pixel)
+        faces = self.mtcnn_detector(self.img)
 
         if faces:
-            num_face = len(faces)
-
-            print(f"Found {num_face} face(s) in the image")
-
-            x1, y1, width, height = faces[0]["box"]
-            x2, y2 = x1+width, y1+height
-            face = pixel[y1:y2, x1:x2]
-            image = Image.fromarray(face)
-            image = image.resize(self.img_size)
-            face_array = np.asarray(image)
+            face_array = faces.numpy()
 
             return face_array
         else:
             return None
 
-    def extract_embeddings(self, face_array):
+    def extract_embeddings(face_array):
         if face_array is not None:
-            face = face_array.astype("float32")
-            face = np.expand_dims(face, axis=0)
-            face = preprocess_input(face, version=2)
-            embeddings = self.model.predict(face)
+            face_tensor = torch.tensor(face_array).unsqueeze(0)  # Add batch dimension
+            with torch.no_grad():
+                embeddings = self.model(face_tensor).numpy()
             embeddings = np.squeeze(embeddings, axis=0)
-
             return embeddings
-        
         else: 
             return None
         
