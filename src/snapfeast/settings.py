@@ -82,11 +82,11 @@ WSGI_APPLICATION = "snapfeast.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "menu_db",
+        "NAME": "snapfeast_db",
         "USER": "postgres",
         "PASSWORD": "testimony",
         "HOST": 'localhost',
-        "PORT": '3000',
+        "PORT": '5432',
     }
 }
 
