@@ -9,7 +9,7 @@ class MealOrderSerializer(serializers.ModelSerializer):
             "user_id",
             "food_type",
             "price",
-            "date_created"
+            "date_ordered"
         )
 
         model = MealOrder
