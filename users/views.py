@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated  
 from django.core.files.base import ContentFile
 from django.contrib.auth import login, authenticate
-from ..utils.match_face import FaceMatch
-from ..utils.facial_processing import FacialProcessing
+from utils.match_face import FaceMatch
+from utils.facial_processing import FacialProcessing
 from base64 import b64decode
 from .forms import UserSignUpForm, EmailLoginForm, UserUpdateForm, ImageUploadForm
 
