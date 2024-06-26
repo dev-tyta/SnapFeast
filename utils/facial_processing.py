@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 import torch
 from facenet_pytorch import InceptionResnetV1, MTCNN as FacenetMTCNN
-from src.users.models import UserEmbeddings
+from ..users.models import UserEmbeddings
 
 
 
