@@ -10,13 +10,16 @@ class UserProfileAdmin(UserAdmin):
     model = UserProfile
     add_form = UserSignUpForm
     form = UserUpdateForm
-    list_display = ['first_name', 'last_name', 'mail', 'age']
+    list_display = ['first_name', 'last_name', 'email', 'age', 'is_active']  # Assume 'email' replaces 'mail'
+    list_filter = ['is_active', 'date_joined']  # Useful for large user bases
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields': ('age', 'preferences')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('first_name', 'last_name', 'mail', 'age', 'preferences')}),
+        (None, {'fields': ('first_name', 'last_name', 'email', 'age', 'preferences')}),
     )
+    search_fields = ['first_name', 'last_name', 'email']  # Enhanced search capabilities
+
 
 admin.site.register(UserProfile, UserProfileAdmin)
 

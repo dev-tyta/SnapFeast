@@ -7,29 +7,18 @@ from cloudinary.uploader import upload
 import cloudinary
 import os
 
-load_dotenv()
-
-cloudinary_key = os.getenv('CLOUDINARY_KEY')
-cloudinary_secret = os.getenv('CLOUDINARY_SECRET')
-
-cloudinary.config(
-    cloud_name="snapfeast",
-    api_key=cloudinary_key,
-    api_secret=cloudinary_secret
-)
 
 # Create your models here.
 class UserProfile(AbstractUser):
-    app_label = "user"
-    first_name = models.CharField(max_length=200, blank=False)
-    last_name = models.CharField(max_length=200, blank=False)
-    mail = models.EmailField(max_length=200, unique=True)
+    email = models.EmailField(max_length=200, unique=True)
     age = models.IntegerField(null=True, blank=True)
     preferences = models.JSONField(null=True, blank=True)
-    embeddings = ArrayField(models.FloatField(), null=True, blank=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
     
 class UserImage(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="images")

@@ -13,8 +13,20 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import cloudinary
 
 load_dotenv()
+
+
+cloudinary_key = os.getenv('CLOUDINARY_KEY')
+cloudinary_secret = os.getenv('CLOUDINARY_SECRET')
+
+cloudinary.config(
+    cloud_name="snapfeast",
+    api_key=cloudinary_key,
+    api_secret=cloudinary_secret
+)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",  
+    "drf_spectacular",
     "users",
     "orders"
 ]
@@ -74,8 +87,25 @@ TEMPLATES = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication'
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
 WSGI_APPLICATION = "snapfeast.wsgi.application"
 
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SnapFeast API Project",
+    "DESCRIPTION": "API Documentation for SnapFeast",
+    "VERSION":"1.0.0",
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from utils.facial_processing import FacialProcessing
 from users.models import UserEmbeddings
+from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -17,7 +18,7 @@ class FaceMatch:
             user_embeddings = UserEmbeddings.objects.all()
             embeddings_dict = {ue.user.id: np.array(ue.embeddings) for ue in user_embeddings}
             return embeddings_dict
-        except UserEmbeddings.DoesNotExist:
+        except ObjectDoesNotExist:
             return None
 
 

@@ -1,10 +1,10 @@
 from django.urls import path
+from .views import OrderListView, OrderDetailView, CreateOrderView
 
-from .views import OrderList, OrderDetail, CreateOrderView
-
+app_name = 'orders'  # Useful for namespacing and reversing URLs
 
 urlpatterns = [
-    path("create/", CreateOrderView.as_view(), name="create_order"),
-    path("<int:pk>/", OrderDetail.as_view(), name="order_details"),
-    path("", OrderList.as_view(), name="order_list")
+    path("", CreateOrderView.as_view(), name="create"),  # POST here creates a new order
+    path("<int:pk>/", OrderDetailView.as_view(), name="detail"),  # GET, PUT, DELETE on individual order
+    path("list/", OrderListView.as_view(), name="list"),  # GET list of all orders for the user
 ]

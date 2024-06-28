@@ -1,15 +1,34 @@
 from rest_framework import serializers
-
+from django.contrib.auth import get_user_model
 from .models import MealOrder
+from decimal import Decimal
+
+User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username')
+
+
 
 
 class MealOrderSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    price = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        min_value=Decimal('0.01')  # Ensure min_value is a Decimal instance
+    )
     class Meta:
-        fields = (
-            "user_id",
-            "food_type",
-            "price",
-            "date_ordered"
-        )
-
         model = MealOrder
+        fields = ('user', 'food_type', 'price', 'date_ordered')
+        read_only_fields = ('date_ordered',)  # Making date_ordered read-only
+
+    def validate_price(self, value):
+        """
+        Check that the price is not negative.
+        """
+        if value < 0:
+            raise serializers.ValidationError("Price must be a positive number.")
+        return value

@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import FacialRecognitionLoginAPIView, UserMailLoginAPIView, UserSignUpAPIView, UserProfileUpdateAPIView
 
+app_name = 'users' 
+
 urlpatterns = [
     path('signup/', UserSignUpAPIView.as_view(), name='signup'),
     path('login/', UserMailLoginAPIView.as_view(), name='login'),
