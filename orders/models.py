@@ -6,6 +6,7 @@ class MealOrder(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
+        null=True,
         related_name='meal_orders'
     )
     FOOD_TYPE_CHOICES = [
@@ -15,12 +16,14 @@ class MealOrder(models.Model):
     ]
     food_type = models.CharField(
         max_length=50, 
-        choices=FOOD_TYPE_CHOICES
+        choices=FOOD_TYPE_CHOICES,
+        null=True
     )
     price = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        validators=[MinValueValidator(0.01)]
+        validators=[MinValueValidator(0.01)],
+        null=True
     )
     date_ordered = models.DateTimeField(auto_now_add=True)
 

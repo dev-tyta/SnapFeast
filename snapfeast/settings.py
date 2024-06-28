@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import cloudinary
+import dj_database_url
+
 
 load_dotenv()
 
@@ -120,6 +122,10 @@ DATABASES = {
         "PORT": '5432',
     }
 }
+
+# DATABASES = {
+#     'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+# }
 
 
 
