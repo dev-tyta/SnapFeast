@@ -2,6 +2,7 @@ facenet_pytorch
 cloudinary
 torch
 surprise
+scikit-learn
 django
 djangorestframework
 drf_spectacular
