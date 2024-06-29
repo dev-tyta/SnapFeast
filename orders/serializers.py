@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import MealOrder
+from .models import MealOrder, Meal
 from decimal import Decimal
 
 User = get_user_model()
@@ -9,6 +9,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username')
+
+class MealSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meal
+        fields = '__all__'
 
 
 class MealOrderSerializer(serializers.ModelSerializer):
@@ -20,7 +25,7 @@ class MealOrderSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = MealOrder
-        fields = ('user', 'food_type', 'price', 'date_ordered')
+        fields = ('user', 'meal', "quantity", 'price', 'date_ordered')
         read_only_fields = ('date_ordered',)  # Making date_ordered read-only
 
     def validate_price(self, value):

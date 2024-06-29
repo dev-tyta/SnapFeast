@@ -1,8 +1,10 @@
 facenet_pytorch
 cloudinary
 torch
+surprise
 django
 djangorestframework
+drf_spectacular
 dj-database-url==2.1.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9

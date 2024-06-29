@@ -328,8 +328,18 @@ paths:
         '200':
           description: No response body
   /api/v1/users/update/:
-    post:
-      operationId: v1_users_update_create
+    get:
+      operationId: v1_users_update_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: v1_users_update_update
       tags:
       - v1
       security:
@@ -340,16 +350,6 @@ paths:
           description: No response body
 components:
   schemas:
-    FoodTypeEnum:
-      enum:
-      - AMALA
-      - PIZZA
-      - BURGER
-      type: string
-      description: |-
-        * `AMALA` - Amala
-        * `PIZZA` - Pizza
-        * `BURGER` - Burger
     MealOrder:
       type: object
       properties:
@@ -357,8 +357,14 @@ components:
           allOf:
           - $ref: '#/components/schemas/User'
           readOnly: true
-        food_type:
-          $ref: '#/components/schemas/FoodTypeEnum'
+        meal:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
         price:
           type: string
           format: decimal
@@ -369,7 +375,6 @@ components:
           readOnly: true
       required:
       - date_ordered
-      - food_type
       - price
       - user
     PatchedMealOrder:
@@ -379,8 +384,14 @@ components:
           allOf:
           - $ref: '#/components/schemas/User'
           readOnly: true
-        food_type:
-          $ref: '#/components/schemas/FoodTypeEnum'
+        meal:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
         price:
           type: string
           format: decimal
