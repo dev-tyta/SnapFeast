@@ -3,6 +3,10 @@ cloudinary
 torch
 surprise
 scikit-learn
+pandas
+numpy
+PIL
+io
 django
 djangorestframework
 drf_spectacular

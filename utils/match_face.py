@@ -1,4 +1,3 @@
-import json
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from utils.facial_processing import FacialProcessing
