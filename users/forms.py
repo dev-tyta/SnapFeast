@@ -5,7 +5,7 @@ from .models import UserProfile, UserImage
 class UserSignUpForm(UserCreationForm):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'email', 'age', 'password1', 'password2')
+        fields = ('username', 'first_name', 'last_name', 'email', 'age', 'password1', 'password2')
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -16,7 +16,7 @@ class UserSignUpForm(UserCreationForm):
 class UserUpdateForm(UserChangeForm):
     class Meta:
         model = UserProfile
-        fields = ('first_name', 'last_name', 'email', 'age', 'preferences')
+        fields = ('username', 'first_name', 'last_name', 'email', 'age', 'preferences')
 
 class EmailLoginForm(forms.Form):
     email = forms.EmailField()

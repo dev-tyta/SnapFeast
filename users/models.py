@@ -5,10 +5,10 @@ from cloudinary.models import CloudinaryField
 
 class UserProfile(AbstractUser):
     email = models.EmailField(max_length=200, null=True, unique=True)
+    username= models.CharField(max_length=200, null=True, unique=True)
     age = models.PositiveIntegerField(null=True, blank=True)
     preferences = models.JSONField(null=True, blank=True)
 
-    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):

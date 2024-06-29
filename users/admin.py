@@ -8,13 +8,13 @@ class UserProfileAdmin(UserAdmin):
     model = UserProfile
     add_form = UserSignUpForm
     form = UserUpdateForm
-    list_display = ('first_name', 'last_name', 'email', 'age', 'is_active')
+    list_display = ('username','first_name', 'last_name', 'email', 'age', 'is_active')
     list_filter = ('is_active', 'date_joined')
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields': ('age', 'preferences')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('first_name', 'last_name', 'email', 'age', 'preferences')}),
+        (None, {'fields': ('username', 'first_name', 'last_name', 'email', 'age', 'preferences')}),
     )
     search_fields = ('first_name', 'last_name', 'email')
 

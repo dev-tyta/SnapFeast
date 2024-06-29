@@ -4,7 +4,7 @@ from .models import UserProfile, UserImage, UserEmbeddings
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ('id', 'first_name', 'last_name', 'email', 'age', 'preferences')
+        fields = ('id', 'username' 'first_name', 'last_name', 'email', 'age', 'preferences')
 
 class UserImageSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
