@@ -5,8 +5,7 @@ surprise
 scikit-learn
 pandas
 numpy
-PIL
-io
+Pillow
 django
 djangorestframework
 drf_spectacular
