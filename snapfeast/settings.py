@@ -45,7 +45,7 @@ DEBUG = True
 
 # DEBUG = os.getenv('DJANGO_DEBUG')
 
-ALLOWED_HOSTS = ['localhost', 'https://snapfeast.onrender.com/',]
+ALLOWED_HOSTS = ['localhost', 'snapfeast.onrender.com',]
 
 
 # Application definition
