@@ -1,31 +1,28 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, AuthenticationForm
-from django.contrib.auth import get_user_model
-
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import UserProfile, UserImage
-
-User = get_user_model()
 
 class UserSignUpForm(UserCreationForm):
     class Meta:
         model = UserProfile
-        fields = ('email', 'first_name', 'last_name', 'age', 'preferences', 'password')  
+        fields = ('first_name', 'last_name', 'email', 'age', 'password1', 'password2')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if UserProfile.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email is already in use.")
+        return email
 
 class UserUpdateForm(UserChangeForm):
     class Meta:
         model = UserProfile
-        fields = ('username', 'first_name', 'last_name', 'age', 'preferences', 'password') 
+        fields = ('first_name', 'last_name', 'email', 'age', 'preferences')
 
-
-class EmailLoginForm(AuthenticationForm):
-    mail = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={'autofocus': True}))
-
+class EmailLoginForm(forms.Form):
+    email = forms.EmailField()
+    password = forms.CharField(widget=forms.PasswordInput)
 
 class ImageUploadForm(forms.ModelForm):
     class Meta:
         model = UserImage
-        fields = ['image']
-
-    def __init__(self, *args, **kwargs):
-        super(ImageUploadForm, self).__init__(*args, **kwargs)
-        self.fields['image'].required = False
+        fields = ('image',)

@@ -11,8 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username')
 
 
-
-
 class MealOrderSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     price = serializers.DecimalField(
