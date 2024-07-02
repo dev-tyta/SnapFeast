@@ -5,12 +5,19 @@ from django.core.validators import MinValueValidator
 
 class Meal(models.Model):
     FOOD_TYPE_CHOICES = [
-        ('AMALA', 'Amala'),
-        ('PIZZA', 'Pizza'),
-        ('BURGER', 'Burger')
+        ('Amala with Goat Meat', 'Amala with Goat Meat'),
+        ('Jollof and Fried Rice with Chicken', 'Jollof and Fried Rice with Chicken'),
+        ('Porridge with Vegetable', 'Porridge with Vegetable'),
+        ('Pounded Yam with Egusi Soup','Pounded Yam with Egusi Soup'),
+        ('White Rice, Beans and Fried Stew','White Rice, Beans and Fried Stew'),
+        ('Yam and Fried Eggs','Yam and Fried Eggs'),
+        ('Spaghetti Bolognese with Sauce', 'Spaghetti Bolognese with Sauce'),
+        ('Chicken and Chips', 'Chicken and Chips'),
+        ('Fruit Salad', 'Fruit Salad'),
+
     ]
     meal = models.CharField(
-        max_length=50, 
+        max_length=500, 
         choices=FOOD_TYPE_CHOICES,
         null=True
     )

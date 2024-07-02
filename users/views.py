@@ -20,7 +20,12 @@ class UserSignUpAPIView(APIView):
         responses={201: UserProfileSerializer},
         description="Register a new user and their facial data for recognition.",
         parameters=[
-            OpenApiParameter(name='image', description='Upload user image', required=True, type=OpenApiTypes.FILE, location=OpenApiParameter.FORM),
+            OpenApiParameter(
+                name='image', 
+                description='Upload user image', 
+                required=True, 
+                type=OpenApiTypes.BINARY, 
+            ),
         ],
         examples=[
             OpenApiExample(
@@ -73,15 +78,20 @@ class EmailLoginAPIView(APIView):
         description="Authenticate a user using their email and password.",
         request=EmailLoginSerializer,
         responses={
-            200: Response('Login Successful', examples={
+            200: {
+                'desrciption':'Login Successful', 
+                'content':{
                 'application/json': {
                     'example': {
                         'status': 'Success',
                         'message': 'Login successful'
                     }
                 }
-            }),
-            400: Response('Invalid Credentials or Bad Request', examples={
+            }
+            },
+            400: {
+                'description':'Invalid Credentials or Bad Request', 
+                'content':{
                 'application/json': {
                     'example': {
                         'status': 'Error',
@@ -92,7 +102,8 @@ class EmailLoginAPIView(APIView):
                         'message': 'This field is required.'
                     }
                 }
-            })
+            }
+            }
         },
         examples=[
             OpenApiExample(
@@ -170,6 +181,14 @@ class FacialRecognitionLoginAPIView(APIView):
                 }
             }
         },
+        parameters=[
+            OpenApiParameter(
+                name='image', 
+                description='Upload user image', 
+                required=True, 
+                type=OpenApiTypes.BINARY,
+            ),
+        ],
         examples=[
             OpenApiExample(
                 name="Submit Image for Facial Recognition",
