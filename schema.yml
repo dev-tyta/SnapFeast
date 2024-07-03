@@ -508,7 +508,6 @@ paths:
                   email: john.doe@example.com
                   age: 30
                   preferences: None
-                  image: file.png
                 summary: Example of a valid request
                 description: This is what a valid request might look like
           application/x-www-form-urlencoded:
@@ -517,7 +516,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UserProfile'
-        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -537,7 +535,6 @@ paths:
                     email: john.doe@example.com
                     age: 30
                     preferences: None
-                    image: file.png
                   summary: Example of a valid request
                   description: This is what a valid request might look like
           description: ''
@@ -583,6 +580,7 @@ paths:
                   email: updated@example.com
                   age: 30
                   preferences: Updated preferences
+                  image: path/to/updated/image.jpg
                 summary: Example of a user profile update request.
                 description: A valid example showing how to update user profile data.
           application/x-www-form-urlencoded:
@@ -591,7 +589,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UserProfile'
-        required: true
       security:
       - tokenAuth: []
       - cookieAuth: []
@@ -612,6 +609,7 @@ paths:
                     email: updated@example.com
                     age: 30
                     preferences: Updated preferences
+                    image: path/to/updated/image.jpg
                   summary: Successful profile update response.
                   description: Response returned after successfully updating the user
                     profile.
@@ -658,7 +656,7 @@ components:
         price:
           type: string
           format: decimal
-          pattern: ^-?\d{0,999998}(?:\.\d{0,2})?$
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           nullable: true
       required:
       - id
@@ -749,12 +747,6 @@ components:
           maxLength: 200
       required:
       - id
-    UserImage:
-      type: object
-      properties:
-        image:
-          type: string
-          nullable: true
     UserProfile:
       type: object
       properties:
@@ -784,12 +776,11 @@ components:
         preferences:
           nullable: true
         image:
-          allOf:
-          - $ref: '#/components/schemas/UserImage'
-          writeOnly: true
+          type: string
+          format: uri
+          nullable: true
       required:
       - id
-      - image
   securitySchemes:
     basicAuth:
       type: http

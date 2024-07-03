@@ -8,18 +8,19 @@ class UserProfile(AbstractUser):
     username= models.CharField(max_length=200, null=True, unique=True)
     age = models.PositiveIntegerField(null=True, blank=True)
     preferences = models.JSONField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, upload_to='images/')
 
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
-class UserImage(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, related_name="images")
-    image = CloudinaryField('image', null=True, blank=True)
+# class UserImage(models.Model):
+#     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, related_name="images")
+#     image = CloudinaryField('image', null=True, blank=True)
 
-    def __str__(self):
-        return f"Image for user {self.user.first_name}"
+#     def __str__(self):
+#         return f"Image for user {self.user.first_name}"
 
 class UserEmbeddings(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE, null=True, related_name="embedding")

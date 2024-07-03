@@ -1,29 +1,23 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import UserProfile, UserImage, UserEmbeddings
-from .forms import UserSignUpForm, UserUpdateForm, ImageUploadForm
+from .models import UserProfile, UserEmbeddings
+from .forms import UserSignUpForm, UserUpdateForm
 
 @admin.register(UserProfile)
 class UserProfileAdmin(UserAdmin):
     model = UserProfile
     add_form = UserSignUpForm
     form = UserUpdateForm
-    list_display = ('username','first_name', 'last_name', 'email', 'age', 'is_active')
+    list_display = ('username','first_name', 'last_name', 'email', 'age', 'image','is_active')
     list_filter = ('is_active', 'date_joined')
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields': ('age', 'preferences')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {'fields': ('username', 'first_name', 'last_name', 'email', 'age', 'preferences')}),
+        (None, {'fields': ('username', 'first_name', 'last_name', 'email', 'age', 'preferences', 'image')}),
     )
     search_fields = ('first_name', 'last_name', 'email')
 
-@admin.register(UserImage)
-class UserImageAdmin(admin.ModelAdmin):
-    form = ImageUploadForm
-    list_display = ('user', 'image')
-    list_filter = ('user__first_name', 'user__last_name')
-    search_fields = ('user__first_name', 'user__last_name')
 
 @admin.register(UserEmbeddings)
 class UserEmbeddingsAdmin(admin.ModelAdmin):

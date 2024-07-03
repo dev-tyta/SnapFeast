@@ -10,8 +10,8 @@ from django.contrib.auth import login, authenticate
 from utils.match_face import FaceMatch
 from utils.facial_processing import FacialProcessing
 from .models import UserProfile
-from .forms import EmailLoginForm, ImageUploadForm
-from .serializers import UserProfileSerializer, UserImageSerializer, EmailLoginSerializer, FacialRecognitionLoginSerializer
+from .forms import EmailLoginForm
+from .serializers import UserProfileSerializer, EmailLoginSerializer, FacialRecognitionLoginSerializer
 
 
 class UserSignUpAPIView(APIView):
@@ -39,7 +39,6 @@ class UserSignUpAPIView(APIView):
                     "email": "john.doe@example.com",
                     "age": 30,
                     "preferences": "None",
-                    "image": "file.png"
                 }
             )
         ]
@@ -55,8 +54,8 @@ class UserSignUpAPIView(APIView):
 
                     # Assuming your UserImageSerializer saves the image and links it to the user
                     processor = FacialProcessing()
-                    image_url = user.image.image.url  # Adjust based on your model structure
-                    results = processor.process_user_images([image_url], user.id)
+                    image = user.image  # Adjust based on your model structure
+                    results = processor.process_user_images(image, user.id)
 
                     if all(result['status'] == 'success' for result in results):
                         return Response({
@@ -126,7 +125,7 @@ class EmailLoginAPIView(APIView):
             )
         ]
     )
-
+    
     def post(self, request, *args, **kwargs):
         form = EmailLoginForm(request.data)
         if form.is_valid():
@@ -224,7 +223,7 @@ class FacialRecognitionLoginAPIView(APIView):
     )
 
     def post(self, request, *args, **kwargs):
-        image_serializer = UserImageSerializer(data=request.data)
+        image_serializer = FacialRecognitionLoginSerializer(data=request.data)
         if image_serializer.is_valid():
             image_instance = image_serializer.save(commit=False)
             image_file = request.FILES.get('image')
@@ -279,7 +278,8 @@ class UserProfileAPIView(APIView):
                     "last_name": "Doe",
                     "email": "updated@example.com",
                     "age": 30,
-                    "preferences": "Updated preferences"
+                    "preferences": "Updated preferences",
+                    "image": "path/to/updated/image.jpg"
                 },
                 request_only=True
             ),
@@ -294,7 +294,8 @@ class UserProfileAPIView(APIView):
                     "last_name": "Doe",
                     "email": "updated@example.com",
                     "age": 30,
-                    "preferences": "Updated preferences"
+                    "preferences": "Updated preferences",
+                    "image": "path/to/updated/image.jpg"
                 },
                 response_only=True
             )

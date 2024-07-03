@@ -15,9 +15,8 @@ class FacialProcessing():
         self.model = InceptionResnetV1(pretrained='vggface2').eval()
 
 
-    def face_extract(self, image_url):
-        response = requests.get(image_url)
-        self.img = Image.open(BytesIO(response.content))
+    def face_extract(self, image):
+        self.img = Image.open(image)
         self.img = self.img.convert("RGB")
         
         faces = self.mtcnn_detector(self.img)
@@ -46,24 +45,24 @@ class FacialProcessing():
         return created
         
 
-    def process_user_images(self, image_urls, user_id):
+    def process_user_images(self, images, user_id):
         results = []
-        for image_url in image_urls:
+        for image in images:
             try:
-                face_array = self.face_extract(image_url)
+                face_array = self.face_extract(image)
                 if face_array is not None:
                     embeddings = self.extract_embeddings(face_array)
                     if embeddings is not None:
                         created = self.save_embeddings_to_db(user_id, embeddings)
                         if created:
-                            results.append({'image': image_url, 'status': 'success', 'message': 'Embeddings saved successfully'})
+                            results.append({'image': image, 'status': 'success', 'message': 'Embeddings saved successfully'})
                         else:
-                            results.append({'image': image_url, 'status': 'error', 'message': 'Failed to save embeddings'})
+                            results.append({'image': image, 'status': 'error', 'message': 'Failed to save embeddings'})
                     else:
-                        results.append({'image': image_url, 'status': 'error', 'message': 'Embeddings cannot be extracted'})
+                        results.append({'image': image, 'status': 'error', 'message': 'Embeddings cannot be extracted'})
                 else:
-                    results.append({'image': image_url, 'status': 'error', 'message': 'No face detected in the image'})
+                    results.append({'image': image, 'status': 'error', 'message': 'No face detected in the image'})
             except Exception as e:
-                results.append({'image': image_url, 'status': 'error', 'message': f'Processing failed: {str(e)}'})
+                results.append({'image': image, 'status': 'error', 'message': f'Processing failed: {str(e)}'})
 
         return results

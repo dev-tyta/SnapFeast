@@ -1,24 +1,13 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from .models import UserProfile, UserImage, UserEmbeddings
+from .models import UserProfile, UserEmbeddings
 
-class UserImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserImage
-        fields = ('image',)
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    image = UserImageSerializer(write_only=True)  # Nest the image serializer
 
     class Meta:
         model = UserProfile
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'age', 'preferences', 'image')
-
-    def create(self, validated_data):
-        image_data = validated_data.pop('image')
-        user = UserProfile.objects.create(**validated_data)
-        UserImage.objects.create(user=user, **image_data)
-        return user
     
 
 class EmailLoginSerializer(serializers.Serializer):
