@@ -7,10 +7,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'age', 'preferences',)
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'age', 'preferences', 'image')
         
     
-
 class EmailLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
