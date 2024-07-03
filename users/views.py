@@ -16,17 +16,53 @@ from .serializers import UserProfileSerializer, EmailLoginSerializer, FacialReco
 
 class UserSignUpAPIView(APIView):
     @extend_schema(
-        request=UserProfileSerializer,
+        request={
+            'multipart/form-data':{
+                'type':'object',
+                'properties':{
+                    'username': {
+                        'type': 'string',
+                        'description': 'Username for the new user. Must be unique.'
+                        },
+                    'first_name': {
+                        'type': 'string',
+                        'description': 'First name of the new user.'
+                        },
+                    'last_name': {
+                        'type': 'string',
+                        'description': 'Last name of the new user.'
+                        },
+                    'email': {
+                        'type': 'string', 
+                        'format': 'email',
+                        'description': 'Email address of the new user. Must be unique.'
+                        },
+                    'age': {
+                        'type': 'integer',
+                        'description': 'Age of the new user. Must be an integer.'
+                        },
+                    'preferences': {
+                        'type': 'string',
+                        'description': 'Food Preferences of User',
+                        },
+                    'image': {
+                        'type': 'string', 
+                        'format': 'binary',
+                        'description':'Face Image Uploaded by User'},
+                    }
+                }
+            }
+        ,
         responses={201: UserProfileSerializer},
         description="Register a new user and their facial data for recognition.",
-        parameters=[
-            OpenApiParameter(
-                name='image', 
-                description='Upload user image', 
-                required=True, 
-                type=OpenApiTypes.BINARY, 
-            ),
-        ],
+        # parameters=[
+        #     OpenApiParameter(
+        #         name='image', 
+        #         description='Upload user image', 
+        #         required=True, 
+        #         type=OpenApiTypes.BINARY, 
+        #     ),
+        # # ],
         examples=[
             OpenApiExample(
                 "Example 1",
@@ -127,7 +163,7 @@ class EmailLoginAPIView(APIView):
     )
     
     def post(self, request, *args, **kwargs):
-        form = EmailLoginForm(request.data)
+        form = EmailLoginSerializer(request.data)
         if form.is_valid():
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
@@ -142,7 +178,18 @@ class EmailLoginAPIView(APIView):
 class FacialRecognitionLoginAPIView(APIView):
     @extend_schema(
         description="Authenticate a user using facial recognition.",
-        request=FacialRecognitionLoginSerializer,
+        request={
+            'multipart/form-data': {
+                'type':'object',
+                'properties':{
+                    'image': {
+                        'type': 'string', 
+                        'format': 'binary',
+                        'description':'Login Face Image Uploaded by User'
+                    }
+                }
+            }
+        },
         responses={
             200: {
                 'description': 'Login Successful',
@@ -180,14 +227,14 @@ class FacialRecognitionLoginAPIView(APIView):
                 }
             }
         },
-        parameters=[
-            OpenApiParameter(
-                name='image', 
-                description='Upload user image', 
-                required=True, 
-                type=OpenApiTypes.BINARY,
-            ),
-        ],
+        # parameters=[
+        #     OpenApiParameter(
+        #         name='image', 
+        #         description='Upload user image', 
+        #         required=True, 
+        #         type=OpenApiTypes.BINARY,
+        #     ),
+        # ],
         examples=[
             OpenApiExample(
                 name="Submit Image for Facial Recognition",
