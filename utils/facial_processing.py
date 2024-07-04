@@ -4,14 +4,17 @@ import torch
 from PIL import Image
 from facenet_pytorch import InceptionResnetV1, MTCNN
 from users.models import UserEmbeddings
-from django.conf import settings
 from django.core.cache import cache
+import gc
 
 class FacialProcessing:
+    _model = None  # Class variable to store the model
+
     def __init__(self, required_size=(160, 160)):
         self.img_size = required_size
         self.mtcnn_detector = MTCNN(image_size=self.img_size[0], thresholds=[0.6, 0.7, 0.7])
-        self.model = InceptionResnetV1(pretrained='vggface2').eval()
+        if FacialProcessing._model is None:
+            FacialProcessing._model = InceptionResnetV1(pretrained='vggface2').eval()
 
     def face_extract(self, image):
         img = Image.open(image).convert("RGB")
@@ -22,7 +25,7 @@ class FacialProcessing:
         if face_array is not None:
             face_tensor = torch.tensor(face_array).unsqueeze(0)
             with torch.no_grad():
-                embeddings = self.model(face_tensor).numpy()
+                embeddings = FacialProcessing._model(face_tensor).numpy()
             return np.squeeze(embeddings, axis=0)
         return None
 
@@ -67,4 +70,7 @@ class FacialProcessing:
                     'status': 'error',
                     'message': f'Processing failed: {str(e)}'
                 })
+            finally:
+                # Explicitly invoke garbage collection to free up memory
+                gc.collect()
         return results
