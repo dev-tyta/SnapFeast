@@ -8,6 +8,7 @@ numpy
 Pillow
 django
 djangorestframework
+django-cors-headers
 drf_spectacular
 dj-database-url==2.1.0
 gunicorn==21.2.0
