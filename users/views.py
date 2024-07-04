@@ -2,6 +2,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular import openapi
@@ -36,6 +38,11 @@ class UserSignUpAPIView(APIView):
                         'type': 'string', 
                         'format': 'email',
                         'description': 'Email address of the new user. Must be unique.'
+                        },
+                    'password': {
+                        'type': 'string',
+                        'format': 'password',
+                        'description': 'Password for the new user.'
                         },
                     'age': {
                         'type': 'integer',
@@ -87,17 +94,23 @@ class UserSignUpAPIView(APIView):
             try:
                 with transaction.atomic():
                     user = serializer.save()
+                    user.set_password(request.data["password"])
+                    user.save()
 
                     # Assuming your UserImageSerializer saves the image and links it to the user
                     processor = FacialProcessing()
-                    image = user.image  # Adjust based on your model structure
+                    image = request.FILES.get("image")
+                    if not image:
+                        raise ValueError("Face is needed for signup")
+
                     results = processor.process_user_images(image, user.id)
 
                     if all(result['status'] == 'success' for result in results):
+                        token, _ = Token.object.get_or_create(user=user)
                         return Response({
                             'status': 'Success',
                             'message': 'User and facial data registered successfully',
-                            'details': results
+                            'token_key': token.key
                         }, status=status.HTTP_201_CREATED)
                     raise Exception('Facial processing errors')
             except Exception as e:
@@ -163,16 +176,21 @@ class EmailLoginAPIView(APIView):
     )
     
     def post(self, request, *args, **kwargs):
-        form = EmailLoginSerializer(request.data)
-        if form.is_valid():
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
+        serializer = EmailLoginSerializer(request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            password = serializer.validated_data.get('password')
             user = authenticate(request, username=email, password=password)
             if user:
-                login(request, user)
-                return Response({'status': 'Success', 'message': 'Login successful'}, status=status.HTTP_200_OK)
+                token, _ = Token.object.get_or_create(user=user)
+                return Response(
+                    {
+                        'status': 'Success',
+                        'message': 'Login successful',
+                        'token':token.key
+                        }, status=status.HTTP_200_OK)
             return Response({'status': 'Error', 'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FacialRecognitionLoginAPIView(APIView):
@@ -282,14 +300,20 @@ class FacialRecognitionLoginAPIView(APIView):
                 if match_result['status'] == 'Success':
                     user_id = match_result['user_id']
                     user = UserProfile.objects.get(pk=user_id)
-                    login(request, user)
-                    return Response({'status': 'Success', 'message': 'Login successful', 'user_id': user_id}, status=status.HTTP_200_OK)
+                    token, _ = Token.object.get_or_create(user=user)
+                    return Response(
+                        {
+                            'status': 'Success',
+                            'message': 'Login successful',
+                            'token': token.key
+                            }, status=status.HTTP_200_OK)
                 return Response({'status': 'Error', 'message': match_result['message']}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'Error', 'message': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
