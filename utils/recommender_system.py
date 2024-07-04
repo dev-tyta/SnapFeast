@@ -8,6 +8,7 @@ from django.db.models import Prefetch
 from django.db.models import Count
 from django.utils import timezone
 import os
+import random
 
 class MealRecommender:
     def __init__(self):
@@ -18,12 +19,13 @@ class MealRecommender:
 
     def fetch_data(self):
         orders = MealOrder.objects.all().values('user_id', 'meal_id', 'quantity')
-        return pd.DataFrame(orders)
+        return pd.DataFrame(list(orders))
 
     def train_model(self):
         data = self.fetch_data()
         if data.empty:
-            raise ValueError("No data available to train the model")
+            self.algo = None
+            return None
         
         reader = Reader(rating_scale=(1, 5))
         dataset = Dataset.load_from_df(data[['user_id', 'meal_id', 'quantity']], reader)
@@ -67,6 +69,9 @@ class MealRecommender:
         if cached_recommendations:
             return cached_recommendations
 
+        if self.algo is None:
+            return self.get_random_recommendations()
+
         all_meals = Meal.objects.all()
         meal_ids = [meal.id for meal in all_meals]
 
@@ -91,4 +96,8 @@ class MealRecommender:
 
         sorted_recommendations = sorted(recommendations, key=lambda meal: preference_scores[meal.id], reverse=True)
 
-        return sorted_recommendations[:3]  # Return top 3 after adjustment
+        return sorted_recommendations[:3]  # Return top 5 after adjustment
+
+    def get_random_recommendations(self):
+        all_meals = list(Meal.objects.all())
+        return random.sample(all_meals, min(3, len(all_meals)))
