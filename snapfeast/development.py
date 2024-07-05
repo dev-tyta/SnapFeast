@@ -3,6 +3,7 @@ from settings import BASE_DIR
 from settings import *
 
 
+SECRET_KEY = os.environ['SECRET_KEY']
 ALLOWED_HOSTS = [os.environ['WEBSITE_HOSTNAME']]
 CRSF_TRUSTED_ORIGINS = ["https://" + os.environ['WEBSITE_HOSTNAME']]
 DEBUG = False
