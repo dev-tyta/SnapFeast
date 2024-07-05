@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "builds": [
+      { "src": "manage.py", "use": "@vercel/python" },
+      { "src": "snapfeast/asgi.py", "use": "@vercel/python" }
+    ],
+    "routes": [
+      { "src": "/(.*)", "dest": "snapfeast/asgi.py" }
+    ]
+  }
+  

@@ -33,7 +33,7 @@ DEBUG = False
 
 # DEBUG = os.getenv('DJANGO_DEBUG')
 
-ALLOWED_HOSTS = ['localhost', 'snapfeast.onrender.com', 'snapfeast.azurewebsites.net', 'snap-feast.vercel.app']
+ALLOWED_HOSTS = ['127.0.0.1', 'snapfeast.onrender.com', 'snapfeast.azurewebsites.net', 'snap-feast.vercel.app']
 CRSF_TRUSTED_ORIGINS = ["https://" + 'snap-feast.vercel.app', "https://" + 'snapfeast.azurewebsites.net', "https://" + 'snapfeast.onrender.com']
 
 # ALLOWED_HOSTS = []
