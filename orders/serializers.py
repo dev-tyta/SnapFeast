@@ -21,8 +21,9 @@ class MealOrderSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(
         max_digits=10, 
         decimal_places=2, 
-        min_value=Decimal('0.01')  # Ensure min_value is a Decimal instance
+        min_value=Decimal('0.01')
     )
+    
     class Meta:
         model = MealOrder
         fields = ('user', 'meal', "quantity", 'price', 'date_ordered')

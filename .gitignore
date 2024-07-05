@@ -154,6 +154,7 @@ cython_debug/
 
 # Database for Project
 /data/
+/images/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
