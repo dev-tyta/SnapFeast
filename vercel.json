@@ -8,9 +8,9 @@
     },
     {
       "src": "build.sh",
-      "use": "@vercel/static-build",
+      "use": "@vercel/python",
       "config": {
-        "distDir": "staticfiles_build"
+        "runtime": "python3.11"
       }
     }
   ],

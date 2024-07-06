@@ -1,6 +1,5 @@
-# build.sh
-pip install -r requirements.txt
-
-python3.11 manage.py migrate
-
-python3.11 manage.py collectstatic
+#!/bin/bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py collectstatic --noinput
