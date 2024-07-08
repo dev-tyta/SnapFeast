@@ -6,13 +6,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular import openapi
 from django.db import transaction
 from django.contrib.auth import login, authenticate
 from utils.match_face import FaceMatch
 from utils.facial_processing import FacialProcessing
 from .models import UserProfile
-from .forms import EmailLoginForm
 from .serializers import UserProfileSerializer, EmailLoginSerializer, FacialRecognitionLoginSerializer
 
 
@@ -98,20 +96,19 @@ class UserSignUpAPIView(APIView):
                     user.set_password(request.data["password"])
                     user.save()
 
-                    # Assuming your UserImageSerializer saves the image and links it to the user
                     processor = FacialProcessing()
                     image = request.FILES.get("image")
                     if not image:
                         raise ValueError("Face is needed for signup")
 
-                    results = processor.process_user_images(image, user.id)
+                    results = processor.process_user_images([image], user.id)
 
                     if all(result['status'] == 'success' for result in results):
-                        token, _ = Token.object.get_or_create(user=user)
+                        token, _ = Token.objects.get_or_create(user=user)
                         return Response({
                             'status': 'Success',
                             'message': 'User and facial data registered successfully',
-                            'token_key': token.key
+                            'token': token.key
                         }, status=status.HTTP_201_CREATED)
                     raise Exception('Facial processing errors')
             except Exception as e:
@@ -295,26 +292,35 @@ class FacialRecognitionLoginAPIView(APIView):
     def post(self, request, *args, **kwargs):
         image_serializer = FacialRecognitionLoginSerializer(data=request.data)
         if image_serializer.is_valid():
-            image_instance = image_serializer.save(commit=False)
             image_file = request.FILES.get('image')
 
             if image_file:
-                face_match = FaceMatch(image_file)
+                processor = FacialProcessing()
+                face_array = processor.face_extract(image_file)
+                if face_array is None:
+                    return Response({'status': 'Error', 'message': 'No face detected in the image'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                embeddings = processor.extract_embeddings(face_array)
+                if embeddings is None:
+                    return Response({'status': 'Error', 'message': 'Failed to extract embeddings'}, status=status.HTTP_400_BAD_REQUEST)
+
+                face_match = FaceMatch(embeddings)
                 match_result = face_match.new_face_matching()
 
                 if match_result['status'] == 'Success':
                     user_id = match_result['user_id']
                     user = UserProfile.objects.get(pk=user_id)
-                    token, _ = Token.object.get_or_create(user=user)
+                    token, _ = Token.objects.get_or_create(user=user)
                     return Response(
                         {
                             'status': 'Success',
                             'message': 'Login successful',
                             'token': token.key
-                            }, status=status.HTTP_200_OK)
+                        }, status=status.HTTP_200_OK)
                 return Response({'status': 'Error', 'message': match_result['message']}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'Error', 'message': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UserProfileAPIView(APIView):

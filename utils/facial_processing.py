@@ -8,13 +8,24 @@ from django.core.cache import cache
 import gc
 
 class FacialProcessing:
-    _model = None  # Class variable to store the model
+    _instance = None
+    _model = None
 
-    def __init__(self, required_size=(160, 160)):
-        self.img_size = required_size
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(FacialProcessing, cls).__new__(cls)
+            cls._instance.initialize()
+        return cls._instance
+
+    def initialize(self):
+        self.img_size = (160, 160)
         self.mtcnn_detector = MTCNN(image_size=self.img_size[0], thresholds=[0.6, 0.7, 0.7])
         if FacialProcessing._model is None:
             FacialProcessing._model = InceptionResnetV1(pretrained='vggface2').eval()
+        
+        # Move model to GPU if available
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        FacialProcessing._model = FacialProcessing._model.to(self.device)
 
     def face_extract(self, image):
         img = Image.open(image).convert("RGB")
@@ -23,9 +34,9 @@ class FacialProcessing:
 
     def extract_embeddings(self, face_array):
         if face_array is not None:
-            face_tensor = torch.tensor(face_array).unsqueeze(0)
+            face_tensor = torch.tensor(face_array).unsqueeze(0).to(self.device)
             with torch.no_grad():
-                embeddings = FacialProcessing._model(face_tensor).numpy()
+                embeddings = FacialProcessing._model(face_tensor).cpu().numpy()
             return np.squeeze(embeddings, axis=0)
         return None
 
