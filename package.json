@@ -1,5 +1,0 @@
-{
-    "scripts": {
-      "start": "daphne snapfeast.asgi:application"
-    }
-}
