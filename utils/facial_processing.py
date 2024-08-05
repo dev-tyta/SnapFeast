@@ -1,15 +1,13 @@
 import os
 import numpy as np
-import torch
+import face_recognition
 from PIL import Image
-from facenet_pytorch import InceptionResnetV1, MTCNN
 from users.models import UserEmbeddings
 from django.core.cache import cache
 import gc
 
 class FacialProcessing:
     _instance = None
-    _model = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -18,27 +16,19 @@ class FacialProcessing:
         return cls._instance
 
     def initialize(self):
-        self.img_size = (160, 160)
-        self.mtcnn_detector = MTCNN(image_size=self.img_size[0], thresholds=[0.6, 0.7, 0.7])
-        if FacialProcessing._model is None:
-            FacialProcessing._model = InceptionResnetV1(pretrained='vggface2').eval()
-        
-        # Move model to GPU if available
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        FacialProcessing._model = FacialProcessing._model.to(self.device)
+        pass  # No need to initialize models as face_recognition doesn't require it
 
     def face_extract(self, image):
-        img = Image.open(image).convert("RGB")
-        faces = self.mtcnn_detector(img)
-        return faces.numpy() if faces is not None else None
-
-    def extract_embeddings(self, face_array):
-        if face_array is not None:
-            face_tensor = torch.tensor(face_array).unsqueeze(0).to(self.device)
-            with torch.no_grad():
-                embeddings = FacialProcessing._model(face_tensor).cpu().numpy()
-            return np.squeeze(embeddings, axis=0)
+        img = face_recognition.load_image_file(image)
+        face_locations = face_recognition.face_locations(img)
+        if face_locations:
+            return face_locations
         return None
+
+    def extract_embeddings(self, image, face_location):
+        img = face_recognition.load_image_file(image)
+        face_encoding = face_recognition.face_encodings(img, [face_location])[0]
+        return face_encoding
 
     def save_embeddings_to_db(self, user_id, embeddings):
         user_embeddings, created = UserEmbeddings.objects.update_or_create(
@@ -53,9 +43,11 @@ class FacialProcessing:
         results = []
         for image in images:
             try:
-                face_array = self.face_extract(image)
-                if face_array is not None:
-                    embeddings = self.extract_embeddings(face_array)
+                face_locations = self.face_extract(image)
+                if face_locations:
+                    # We'll use the first detected face
+                    face_location = face_locations[0]
+                    embeddings = self.extract_embeddings(image, face_location)
                     if embeddings is not None:
                         created = self.save_embeddings_to_db(user_id, embeddings)
                         results.append({

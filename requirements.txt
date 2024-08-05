@@ -1,6 +1,6 @@
-facenet_pytorch
+face-recognition
 cloudinary
-torch
+dlib
 surprise
 scikit-learn
 pandas
