@@ -6,8 +6,8 @@ from utils.facial_processing import FacialProcessing
 
 class FaceMatch:
     def __init__(self, embeddings):
-        self.embeddings = embeddings
-        self.face_processor = FacialProcessing()  # This now gets the singleton instance
+        self.embeddings = np.array(embeddings)  # Ensure array format
+        self.face_processor = FacialProcessing()  # Get the singleton instance
 
     def load_embeddings_from_db(self):
         embeddings_dict = cache.get('all_user_embeddings')
@@ -46,4 +46,3 @@ class FaceMatch:
             'status': 'Error',
             'message': 'No matching face found'
         }
-    
