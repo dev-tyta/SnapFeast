@@ -1,0 +1,17 @@
+scikit-learn
+pandas
+numpy
+Pillow
+django
+djangorestframework
+django-cors-headers
+drf_spectacular
+daphne
+dj-database-url
+gunicorn
+psycopg2-binary
+wheel
+whitenoise
+python-dotenv
+surprise
+requests
