@@ -1,6 +1,7 @@
+import os
 import requests
 from django.core.cache import cache
-# from users.models import UserEmbeddings
+from users.models import UserEmbeddings
 
 class FacialProcessing:
     _instance = None
@@ -12,7 +13,7 @@ class FacialProcessing:
         return cls._instance
 
     def initialize(self):
-        self.api_url = "https://testys-faceembeddings.hf.space/extract"
+        self.api_url = os.getenv("FACE_RECOGNITION_API_URL")
     def extract_embeddings(self, image_path):
     
         try:

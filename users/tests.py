@@ -14,7 +14,7 @@ class UserTests(APITestCase):
             last_name='User',
             age=30
         )
-        self.image = SimpleUploadedFile("face.jpg", b"file_content", content_type="image/jpeg")
+        self.image = SimpleUploadedFile("/media/faces/rasaq.jpeg", b"file_content", content_type="image/jpeg")
 
     def test_user_signup(self):
         url = reverse('user_signup')

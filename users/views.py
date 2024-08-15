@@ -7,6 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.throttling import AnonRateThrottle
+from rest_framework.exceptions import ParseError, AuthenticationFailed
+from django.core.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter
 from .serializers import UserRegistrationSerializer, EmailLoginSerializer, FaceLoginSerializer, UserProfileSerializer
 from .models import UserProfile, UserEmbeddings
@@ -16,7 +20,6 @@ from utils.match_face import FaceMatch
 
 class UserSignUpAPIView(APIView):
     permission_classes = [AllowAny]
-    serializer_class = UserRegistrationSerializer
 
     @extend_schema(
         tags=['Authentication'],
@@ -55,7 +58,7 @@ class UserSignUpAPIView(APIView):
         ]
     )        
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = UserRegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
             try:
@@ -91,6 +94,7 @@ class UserSignUpAPIView(APIView):
 
 class EmailLoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
@@ -100,20 +104,24 @@ class EmailLoginView(APIView):
         description="Login with email and password"
     )
     def post(self, request):
-        serializer = EmailLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(email=serializer.validated_data['email'], password=serializer.validated_data['password'])
-            if user:
-                refresh = RefreshToken.for_user(user)
-                return Response({
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    'user': UserProfileSerializer(user).data
-                })
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            serializer = EmailLoginSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                user = authenticate(email=serializer.validated_data['email'], password=serializer.validated_data['password'])
+                if user:
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                        'user': UserProfileSerializer(user).data
+                    })
+                raise AuthenticationFailed('Invalid credentials')
+        except (ValidationError, ParseError) as e:
+            return Response({'error': str(e)}, status=status.HTTP_401_UNAUTHORIZED)
 
 class FaceLoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     @extend_schema(
         tags=['Authentication'],
@@ -123,16 +131,18 @@ class FaceLoginView(APIView):
         description="Login with facial recognition"
     )
     def post(self, request):
-        serializer = FaceLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            image = serializer.validated_data['image']
-            
-            path = default_storage.save('tmp/face_login.jpg', ContentFile(image.read()))
-            
-            face_processor = FacialProcessing()
-            embeddings = face_processor.extract_embeddings(path)
-            
-            if embeddings:
+        try: 
+            serializer = FaceLoginSerializer(data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                image = serializer.validated_data['image']
+                
+                path = default_storage.save('tmp/face_login.jpg', ContentFile(image.read()))
+                
+                face_processor = FacialProcessing()
+                embeddings = face_processor.extract_embeddings(path)
+                
+                if not embeddings:
+                    raise ValidationError('Failed to process face')
                 face_matcher = FaceMatch()
                 match_result = face_matcher.new_face_matching(embeddings)
                 
@@ -144,9 +154,10 @@ class FaceLoginView(APIView):
                         'access': str(refresh.access_token),
                         'user': UserProfileSerializer(user).data
                     })
-            
-            return Response({'error': 'Face not recognized'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise AuthenticationFailed('Face not recognized')
+        except (ValidationError, ParseError) as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class UpdateFaceView(APIView):
     permission_classes = [IsAuthenticated]
@@ -226,3 +237,14 @@ class UserProfileAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except UserProfile.DoesNotExist:
             return Response({'status': 'Error', 'message': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class CustomTokenRefreshView(TokenRefreshView):
+    @extend_schema(
+        tags=['Authentication'],
+        operation_id='refresh_token',
+        responses={200: {'description': 'Token refreshed successfully'}, 401: {'description': 'Invalid token'}}
+    )
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)       
+        return response
+    

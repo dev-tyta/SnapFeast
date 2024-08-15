@@ -1,10 +1,7 @@
-scikit-learn
-pandas
-numpy
-Pillow
 django
 djangorestframework
 django-cors-headers
+djangorestframework-simplejwt
 drf_spectacular
 daphne
 dj-database-url
@@ -15,4 +12,7 @@ whitenoise
 python-dotenv
 surprise
 requests
-djangorestframework-simplejwt
+scikit-learn
+pandas
+numpy
+Pillow

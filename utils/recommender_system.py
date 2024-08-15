@@ -3,7 +3,7 @@ from surprise import Dataset, Reader, SVD
 from surprise.model_selection import train_test_split
 import joblib
 from django.core.cache import cache
-from orders.models import MealOrder, Meal
+# from orders.models import MealOrder, Meal
 from django.utils import timezone
 import os
 import random

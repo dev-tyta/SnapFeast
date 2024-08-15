@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: SnapFeast API Project
+  version: 1.0.0
+  description: API Documentation for SnapFeast
+paths:
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/users/login/email/:
+    post:
+      operationId: email_login
+      description: Login with email and password
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailLogin'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Login successful
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Invalid credentials
+          description: ''
+  /api/users/login/face/:
+    post:
+      operationId: face_login
+      description: Login with facial recognition
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FaceLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FaceLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FaceLogin'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Login successful
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Face not recognized
+          description: ''
+  /api/users/signup/:
+    post:
+      operationId: user_signup
+      description: Register a new user and their facial data for recognition.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Username for the new user. Must be unique.
+                first_name:
+                  type: string
+                  description: First name of the new user.
+                last_name:
+                  type: string
+                  description: Last name of the new user.
+                email:
+                  type: string
+                  format: email
+                  description: Email address of the new user. Must be unique.
+                password:
+                  type: string
+                  format: password
+                  description: Password for the new user.
+                age:
+                  type: integer
+                  description: Age of the new user. Must be an integer.
+                preferences:
+                  type: string
+                  description: Food Preferences of User
+                image:
+                  type: string
+                  format: binary
+                  description: Face Image Uploaded by User
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+              examples:
+                ValidSignupRequest:
+                  value:
+                    username: john_doe
+                    first_name: John
+                    last_name: Doe
+                    email: john.doe@example.com
+                    password: securepassword123
+                    age: 30
+                    preferences: Vegetarian
+                  summary: Example of a valid signup request
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid data
+          description: ''
+  /api/users/token/refresh/:
+    post:
+      operationId: refresh_token
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Token refreshed successfully
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Invalid token
+          description: ''
+  /api/users/update/face/:
+    post:
+      operationId: update_face
+      description: Update user's facial data
+      tags:
+      - User
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Face updated successfully
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Failed to process face
+          description: ''
+  /api/users/update/profile/:
+    get:
+      operationId: get_user_profile
+      description: Retrieve the authenticated user's profile.
+      tags:
+      - User
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Profile not found
+          description: ''
+    put:
+      operationId: update_user_profile
+      description: Update the authenticated user's profile.
+      tags:
+      - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+            examples:
+              UpdateProfileExample:
+                value:
+                  username: updated_username
+                  first_name: John
+                  last_name: Doe
+                  email: updated@example.com
+                  age: 30
+                  preferences: Updated preferences
+                summary: Example of a user profile update request.
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfile'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid data
+          description: ''
+components:
+  schemas:
+    EmailLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - email
+      - password
+    FaceLogin:
+      type: object
+      properties:
+        image:
+          type: string
+          format: uri
+      required:
+      - image
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        age:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        preferences:
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - email
+      - id
+      - username
+    UserRegistration:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        password:
+          type: string
+          writeOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        age:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        preferences:
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+      required:
+      - email
+      - password
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
