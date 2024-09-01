@@ -127,7 +127,9 @@ paths:
       tags:
       - schema
       security:
-      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
       - {}
       responses:
         '200':
@@ -149,17 +151,281 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
-  /api/users/login/email/:
+  /api/v1/orders/:
     post:
-      operationId: email_login
-      description: Login with email and password
+      operationId: v1_orders_create
       tags:
-      - Authentication
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealOrder'
+          description: ''
+  /api/v1/orders/{id}/:
+    get:
+      operationId: v1_orders_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealOrder'
+          description: ''
+    put:
+      operationId: v1_orders_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MealOrder'
+        required: true
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealOrder'
+          description: ''
+    patch:
+      operationId: v1_orders_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMealOrder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMealOrder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMealOrder'
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealOrder'
+          description: ''
+    delete:
+      operationId: v1_orders_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/orders/list/:
+    get:
+      operationId: v1_orders_list_list
+      tags:
+      - v1
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MealOrder'
+          description: ''
+  /api/v1/orders/recommendations/:
+    get:
+      operationId: v1_orders_recommendations_list
+      description: Retrieve meal recommendations for the logged-in user based on their
+        preferences and past orders.
+      summary: Get meal recommendations
+      tags:
+      - Meal Recommendations
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meal'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: No recommendations found
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                description: Internal server error
+          description: ''
+  /api/v1/users/facial-login/:
+    post:
+      operationId: v1_users_facial_login_create
+      description: Authenticate a user using facial recognition.
+      tags:
+      - v1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Login Face Image Uploaded by User
+      security:
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Login Successful
+                content:
+                  application/json:
+                    example:
+                      status: Success
+                      message: Login successful
+                      user_id: '123'
+              examples:
+                SuccessfulLoginResponse:
+                  value:
+                    status: Success
+                    message: Login successful
+                    user_id: '123'
+                  summary: Successful login after facial recognition.
+                  description: Response after a successful facial recognition that
+                    identifies the user.
+                FailedLoginResponse-NoFaceDetected:
+                  value:
+                    status: Error
+                    message: No recognizable face detected in the image.
+                  summary: No face detected in the image.
+                  description: Response when no recognizable face is detected in the
+                    submitted image.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid or Missing Image
+                content:
+                  application/json:
+                    examples:
+                      invalid_image:
+                        summary: Invalid Image Provided
+                        value:
+                          status: Error
+                          message: Invalid image format or corrupted file.
+                      no_face_detected:
+                        summary: No Face Detected
+                        value:
+                          status: Error
+                          message: No recognizable face detected in the image.
+          description: ''
+  /api/v1/users/login/:
+    post:
+      operationId: v1_users_login_create
+      description: Authenticate a user using their email and password.
+      tags:
+      - v1
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EmailLogin'
+            examples:
+              SuccessfulLogin:
+                value:
+                  email: user@example.com
+                  password: securepassword123
+                summary: Successful Login
+                description: A successful login request.
+              FailedLogin:
+                value:
+                  email: user@example.com
+                  password: wrongpassword
+                summary: Failed Login
+                description: A failed login request due to invalid credentials.
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/EmailLogin'
@@ -168,61 +434,41 @@ paths:
               $ref: '#/components/schemas/EmailLogin'
         required: true
       security:
-      - jwtAuth: []
-      - {}
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                description: Login successful
+                desrciption: Login Successful
+                content:
+                  application/json:
+                    example:
+                      status: Success
+                      message: Login successful
           description: ''
-        '401':
+        '400':
           content:
             application/json:
               schema:
-                description: Invalid credentials
+                description: Invalid Credentials or Bad Request
+                content:
+                  application/json:
+                    example:
+                      status: Error
+                      message: Invalid credentials
+                    example2:
+                      status: Error
+                      message: This field is required.
           description: ''
-  /api/users/login/face/:
+  /api/v1/users/signup/:
     post:
-      operationId: face_login
-      description: Login with facial recognition
-      tags:
-      - Authentication
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FaceLogin'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FaceLogin'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/FaceLogin'
-        required: true
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                description: Login successful
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                description: Face not recognized
-          description: ''
-  /api/users/signup/:
-    post:
-      operationId: user_signup
+      operationId: v1_users_signup_create
       description: Register a new user and their facial data for recognition.
       tags:
-      - Authentication
+      - v1
       requestBody:
         content:
           multipart/form-data:
@@ -242,10 +488,6 @@ paths:
                   type: string
                   format: email
                   description: Email address of the new user. Must be unique.
-                password:
-                  type: string
-                  format: password
-                  description: Password for the new user.
                 age:
                   type: integer
                   description: Age of the new user. Must be an integer.
@@ -257,103 +499,37 @@ paths:
                   format: binary
                   description: Face Image Uploaded by User
       security:
-      - jwtAuth: []
-      - {}
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
       responses:
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserRegistration'
+                $ref: '#/components/schemas/UserProfile'
               examples:
-                ValidSignupRequest:
+                Example1:
                   value:
                     username: john_doe
                     first_name: John
                     last_name: Doe
                     email: john.doe@example.com
-                    password: securepassword123
                     age: 30
-                    preferences: Vegetarian
-                  summary: Example of a valid signup request
+                    preferences: None
+                  summary: Example of a valid request
+                  description: This is what a valid request might look like
           description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                description: Invalid data
-          description: ''
-  /api/users/token/refresh/:
-    post:
-      operationId: refresh_token
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
-      tags:
-      - Authentication
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TokenRefresh'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenRefresh'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenRefresh'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                description: Token refreshed successfully
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                description: Invalid token
-          description: ''
-  /api/users/update/face/:
-    post:
-      operationId: update_face
-      description: Update user's facial data
-      tags:
-      - User
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                image:
-                  type: string
-                  format: binary
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                description: Face updated successfully
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                description: Failed to process face
-          description: ''
-  /api/users/update/profile/:
+  /api/v1/users/update/:
     get:
-      operationId: get_user_profile
+      operationId: v1_users_update_retrieve
       description: Retrieve the authenticated user's profile.
       tags:
-      - User
+      - v1
       security:
-      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
       responses:
         '200':
           content:
@@ -368,10 +544,10 @@ paths:
                 description: Profile not found
           description: ''
     put:
-      operationId: update_user_profile
+      operationId: v1_users_update_update
       description: Update the authenticated user's profile.
       tags:
-      - User
+      - v1
       requestBody:
         content:
           application/json:
@@ -386,22 +562,39 @@ paths:
                   email: updated@example.com
                   age: 30
                   preferences: Updated preferences
+                  image: path/to/updated/image.jpg
                 summary: Example of a user profile update request.
+                description: A valid example showing how to update user profile data.
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/UserProfile'
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/UserProfile'
-        required: true
       security:
-      - jwtAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      - basicAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
+              examples:
+                SuccessfulProfileUpdateResponse:
+                  value:
+                    id: 1
+                    username: updated_username
+                    first_name: John
+                    last_name: Doe
+                    email: updated@example.com
+                    age: 30
+                    preferences: Updated preferences
+                    image: path/to/updated/image.jpg
+                  summary: Successful profile update response.
+                  description: Response returned after successfully updating the user
+                    profile.
           description: ''
         '400':
           content:
@@ -419,29 +612,115 @@ components:
           format: email
         password:
           type: string
+          writeOnly: true
       required:
       - email
       - password
-    FaceLogin:
+    Meal:
       type: object
       properties:
-        image:
-          type: string
-          format: uri
-      required:
-      - image
-    TokenRefresh:
-      type: object
-      properties:
-        access:
-          type: string
+        id:
+          type: integer
           readOnly: true
-        refresh:
+        meal:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/MealEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        price:
           type: string
-          writeOnly: true
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
       required:
-      - access
-      - refresh
+      - id
+    MealEnum:
+      enum:
+      - Amala with Goat Meat
+      - Jollof and Fried Rice with Chicken
+      - Porridge with Vegetable
+      - Pounded Yam with Egusi Soup
+      - White Rice, Beans and Fried Stew
+      - Yam and Fried Eggs
+      - Spaghetti Bolognese with Sauce
+      - Chicken and Chips
+      - Fruit Salad
+      type: string
+      description: |-
+        * `Amala with Goat Meat` - Amala with Goat Meat
+        * `Jollof and Fried Rice with Chicken` - Jollof and Fried Rice with Chicken
+        * `Porridge with Vegetable` - Porridge with Vegetable
+        * `Pounded Yam with Egusi Soup` - Pounded Yam with Egusi Soup
+        * `White Rice, Beans and Fried Stew` - White Rice, Beans and Fried Stew
+        * `Yam and Fried Eggs` - Yam and Fried Eggs
+        * `Spaghetti Bolognese with Sauce` - Spaghetti Bolognese with Sauce
+        * `Chicken and Chips` - Chicken and Chips
+        * `Fruit Salad` - Fruit Salad
+    MealOrder:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        meal:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        date_ordered:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_ordered
+      - price
+      - user
+    NullEnum:
+      enum:
+      - null
+    PatchedMealOrder:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        meal:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        date_ordered:
+          type: string
+          format: date-time
+          readOnly: true
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          nullable: true
+          maxLength: 200
+      required:
+      - id
     UserProfile:
       type: object
       properties:
@@ -450,10 +729,7 @@ components:
           readOnly: true
         username:
           type: string
-          maxLength: 200
-        email:
-          type: string
-          format: email
+          nullable: true
           maxLength: 200
         first_name:
           type: string
@@ -461,6 +737,11 @@ components:
         last_name:
           type: string
           maxLength: 150
+        email:
+          type: string
+          format: email
+          nullable: true
+          maxLength: 200
         age:
           type: integer
           maximum: 2147483647
@@ -473,45 +754,17 @@ components:
           format: uri
           nullable: true
       required:
-      - email
       - id
-      - username
-    UserRegistration:
-      type: object
-      properties:
-        username:
-          type: string
-          maxLength: 200
-        email:
-          type: string
-          format: email
-          maxLength: 200
-        password:
-          type: string
-          writeOnly: true
-        first_name:
-          type: string
-          maxLength: 150
-        last_name:
-          type: string
-          maxLength: 150
-        age:
-          type: integer
-          maximum: 2147483647
-          minimum: 0
-          nullable: true
-        preferences:
-          nullable: true
-        image:
-          type: string
-          format: uri
-          nullable: true
-      required:
-      - email
-      - password
-      - username
   securitySchemes:
-    jwtAuth:
+    basicAuth:
       type: http
-      scheme: bearer
-      bearerFormat: JWT
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

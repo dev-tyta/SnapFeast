@@ -3,16 +3,18 @@ from surprise import Dataset, Reader, SVD
 from surprise.model_selection import train_test_split
 import joblib
 from django.core.cache import cache
-# from orders.models import MealOrder, Meal
+from orders.models import MealOrder, Meal
+from django.db.models import Prefetch
+from django.db.models import Count
 from django.utils import timezone
 import os
 import random
 
 class MealRecommender:
     def __init__(self):
-        self.model_path = os.path.join(os.path.dirname(__file__), 'recommendation_model.joblib')
-        self.last_train_path = os.path.join(os.path.dirname(__file__), 'last_train_time.txt')
-        self.retrain_interval = timezone.timedelta(days=1)
+        self.model_path = 'recommendation_model.joblib'
+        self.last_train_path = 'last_train_time.txt'
+        self.retrain_interval = timezone.timedelta(days=1)  # Retrain every 7 days
         self.algo = self.load_or_train_model()
 
     def fetch_data(self):
@@ -61,7 +63,7 @@ class MealRecommender:
         
         if self._should_retrain():
             self.algo = self.train_model()
-            cache.clear()
+            cache.clear()  # Clear all cached recommendations
             cached_recommendations = None
 
         if cached_recommendations:
@@ -89,13 +91,13 @@ class MealRecommender:
 
         for meal in recommendations:
             for key, weight in preferences.items():
-                if key.lower() in meal.name.lower():
+                if key.lower() in meal.meal.lower():
                     preference_scores[meal.id] += weight
 
         sorted_recommendations = sorted(recommendations, key=lambda meal: preference_scores[meal.id], reverse=True)
 
-        return sorted_recommendations[:5]  # Return top 5 after adjustment
+        return sorted_recommendations[:3]  # Return top 5 after adjustment
 
     def get_random_recommendations(self):
         all_meals = list(Meal.objects.all())
-        return random.sample(all_meals, min(5, len(all_meals)))
+        return random.sample(all_meals, min(3, len(all_meals)))

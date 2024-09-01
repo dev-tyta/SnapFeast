@@ -1,48 +1,38 @@
-from rest_framework import serializers
 from django.contrib.auth import authenticate
+from rest_framework import serializers
 from .models import UserProfile, UserEmbeddings
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = UserProfile
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'age', 'preferences', 'image')
-        extra_kwargs = {'password': {'write_only': True}}
-
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'age', 'preferences', 'image')
+        
     
-    class Meta:
-        model = UserProfile
-        fields = ('username', 'email', 'password', 'first_name', 'last_name', 'age', 'preferences', 'image')
-
-    def create(self, validated_data):
-        user = UserProfile.objects.create_user(**validated_data)
-        return user
-
 class EmailLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
+    def validate(self, data):
+        # Optionally add extra validation to check credentials
+        user = authenticate(email=data['email'], password=data['password'])
+        if not user:
+            raise serializers.ValidationError("Invalid login credentials.")
+        return data
 
-        if email and password:
-            user = authenticate(request=self.context.get('request'), email=email, password=password)
-            if not user:
-                msg = 'Unable to log in with provided credentials.'
-                raise serializers.ValidationError(msg, code='authorization')
-        else:
-            msg = 'Must include "email" and "password".'
-            raise serializers.ValidationError(msg, code='authorization')
 
-        attrs['user'] = user
-        return attrs
+class FacialRecognitionLoginSerializer(serializers.Serializer):
+    image = serializers.ImageField(required=True)
 
-class FaceLoginSerializer(serializers.Serializer):
-    image = serializers.ImageField()
+    def validate_image(self, value):
+        # Optionally add extra validation for image properties if necessary
+        return value
+
 
 class UserEmbeddingsSerializer(serializers.ModelSerializer):
+    user = UserProfileSerializer(read_only=True)
+
     class Meta:
         model = UserEmbeddings
         fields = ('id', 'user', 'embeddings')
