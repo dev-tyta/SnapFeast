@@ -7,12 +7,12 @@ from django.utils import timezone
 from orders.models import RecommendationModel
 import random
 import pickle
-from orders.models import RecommendationModel
+
 
 class MealRecommender:
     def __init__(self):
         self.retrain_interval = timezone.timedelta(days=1)  # Retrain every day
-        self.algo = self.load_or_train_model()
+        self.algo = None # self.load_or_train_model()
 
     def fetch_data(self):
         orders = MealOrder.objects.all().values('user_id', 'meal_id', 'quantity')
@@ -38,28 +38,18 @@ class MealRecommender:
 
         return algo
 
-    def load_or_train_model(self):
-        latest_model = RecommendationModel.objects.order_by('-created_at')
-
-        if latest_model and timezone.now() - latest_model.created_at <= self.retrain_interval:
-            return pickle.loads(latest_model.model)
-        else:
-            return self.train_model()
-
-    def _should_retrain(self):
-        latest_model = RecommendationModel.objects.order_by('-created_at').first()
-        if not latest_model:
-            return True
-        return timezone.now() - latest_model.created_at > self.retrain_interval
+    # def load_or_train_model(self):
+    #     latest_model = RecommendationModel.objects.order_by('-created_at').first()
+    #     if not latest_model:
+    #         return self.train_model()
+    #     if latest_model and timezone.now() - latest_model.created_at <= self.retrain_interval:
+    #         return pickle.loads(latest_model.model)
+    #     else:
+    #         return self.train_model()
 
     def get_recommendations(self, user):
         cache_key = f'user_recommendations_{user.id}'
         cached_recommendations = cache.get(cache_key)
-        
-        if self._should_retrain():
-            self.algo = self.train_model()
-            cache.clear()  # Clear all cached recommendations
-            cached_recommendations = None
 
         if cached_recommendations:
             return cached_recommendations
