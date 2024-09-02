@@ -1,20 +1,17 @@
 import pandas as pd
 from surprise import Dataset, Reader, SVD
 from surprise.model_selection import train_test_split
-import joblib
 from django.core.cache import cache
 from orders.models import MealOrder, Meal
-from django.db.models import Prefetch
-from django.db.models import Count
 from django.utils import timezone
-import os
+from orders.models import RecommendationModel
 import random
+import pickle
+from orders.models import RecommendationModel
 
 class MealRecommender:
     def __init__(self):
-        self.model_path = 'recommendation_model.joblib'
-        self.last_train_path = 'last_train_time.txt'
-        self.retrain_interval = timezone.timedelta(days=1)  # Retrain every 7 days
+        self.retrain_interval = timezone.timedelta(days=1)  # Retrain every day
         self.algo = self.load_or_train_model()
 
     def fetch_data(self):
@@ -34,28 +31,26 @@ class MealRecommender:
         algo = SVD()
         algo.fit(trainset)
         
-        joblib.dump(algo, self.model_path)
-        self._update_last_train_time()
+        # Serialize the trained model and save it in the database
+        model_binary = pickle.dumps(algo)
+        model_record = RecommendationModel(model=model_binary, created_at=timezone.now())
+        model_record.save()
+
         return algo
 
     def load_or_train_model(self):
-        try:
-            if self._should_retrain():
-                return self.train_model()
-            return joblib.load(self.model_path)
-        except FileNotFoundError:
+        latest_model = RecommendationModel.objects.order_by('-created_at')
+
+        if latest_model and timezone.now() - latest_model.created_at <= self.retrain_interval:
+            return pickle.loads(latest_model.model)
+        else:
             return self.train_model()
 
     def _should_retrain(self):
-        if not os.path.exists(self.last_train_path):
+        latest_model = RecommendationModel.objects.order_by('-created_at').first()
+        if not latest_model:
             return True
-        with open(self.last_train_path, 'r') as f:
-            last_train_time = timezone.datetime.fromisoformat(f.read().strip())
-        return timezone.now() - last_train_time > self.retrain_interval
-
-    def _update_last_train_time(self):
-        with open(self.last_train_path, 'w') as f:
-            f.write(timezone.now().isoformat())
+        return timezone.now() - latest_model.created_at > self.retrain_interval
 
     def get_recommendations(self, user):
         cache_key = f'user_recommendations_{user.id}'
@@ -96,7 +91,7 @@ class MealRecommender:
 
         sorted_recommendations = sorted(recommendations, key=lambda meal: preference_scores[meal.id], reverse=True)
 
-        return sorted_recommendations[:3]  # Return top 5 after adjustment
+        return sorted_recommendations[:3]  # Return top 3 after adjustment
 
     def get_random_recommendations(self):
         all_meals = list(Meal.objects.all())

@@ -1,6 +1,14 @@
 from django.contrib import admin
-from .models import MealOrder
+from .models import Meal, MealOrder, RecommendationModel
 
-# Register your models here.
+@admin.register(Meal)
+class MealAdmin(admin.ModelAdmin):
+    list_display = ['meal', 'price']
 
-admin.site.register(MealOrder)
+@admin.register(MealOrder)
+class MealOrderAdmin(admin.ModelAdmin):
+    list_display = ['meal', 'user', 'quantity', 'date_ordered']
+
+@admin.register(RecommendationModel)
+class RecommendationModelAdmin(admin.ModelAdmin):
+    list_display = ['created_at']

@@ -10,6 +10,71 @@ from utils.recommender_system import MealRecommender
 from django.db.models import Prefetch
 from rest_framework.authentication import TokenAuthentication
 
+
+class MealCreateView(generics.CreateAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = MealSerializer
+
+    @extend_schema(
+        description="Create a new meal",
+        responses={
+            201: MealSerializer,
+            400: {"description": "Bad request, invalid data"}
+        },
+        request=MealSerializer,
+        summary="Create a new meal"
+    )
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MealDetailView(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = MealSerializer
+
+    @extend_schema(
+        description="Retrieve, update, or delete a meal",
+        responses={
+            200: MealSerializer,
+            404: {'description': 'Not found, no meal with this ID exists'},
+            400: {'description': 'Bad request, invalid data'}
+        },
+        methods=['GET', 'PUT', 'PATCH', 'DELETE'],
+        summary="Manage a specific meal"
+    )
+    def get_object(self):
+        obj = get_object_or_404(Meal, pk=self.kwargs["pk"])
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MealListView(generics.ListAPIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = MealSerializer
+
+    @extend_schema(
+        description="Retrieve a list of meals",
+        responses={200: MealSerializer(many=True)},
+        summary="List all meals"
+    )
+    def get_queryset(self):
+        return Meal.objects.all()
+
 class CreateOrderView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]

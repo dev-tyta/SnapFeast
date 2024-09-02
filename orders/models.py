@@ -2,7 +2,7 @@ from django.db import models
 from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
-
+from django.utils import timezone
 
 class Meal(models.Model):
     FOOD_TYPE_CHOICES = [
@@ -54,3 +54,15 @@ class MealOrder(models.Model):
 
     def __str__(self):
         return f"{self.meal} ordered by {self.user.username} on {self.date_ordered.strftime('%Y-%m-%d')}"
+
+
+
+from django.db import models
+
+class RecommendationModel(models.Model):
+    model = models.BinaryField()  # Field to store the binary representation of the model
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set the field to now when the object is first created
+
+    def __str__(self):
+        return f"Recommendation model created at {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+        

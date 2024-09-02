@@ -3,19 +3,9 @@ import os
 from dotenv import load_dotenv
 import cloudinary
 import dj_database_url
-
+from os import getenv
 
 load_dotenv()
-
-
-cloudinary_key = os.getenv('CLOUDINARY_KEY')
-cloudinary_secret = os.getenv('CLOUDINARY_SECRET')
-
-cloudinary.config(
-    cloud_name="snapfeast",
-    api_key=cloudinary_key,
-    api_secret=cloudinary_secret
-)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -110,19 +100,21 @@ SPECTACULAR_SETTINGS = {
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "snapfeast_db",
-#         "USER": "postgres",
-#         "PASSWORD": "testimony",
-#         "HOST": 'localhost',
-#         "PORT": '5432',
-#     }
-# }
 
+
+# Replace the DATABASES section of your settings.py with this
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': getenv('PGDATABASE'),
+    'USER': getenv('PGUSER'),
+    'PASSWORD': getenv('PGPASSWORD'),
+    'HOST': getenv('PGHOST'),
+    'PORT': getenv('PGPORT', 5432),
+    'OPTIONS': {
+      'sslmode': 'require',
+    },
+  }
 }
 
 

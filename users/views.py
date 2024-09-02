@@ -4,80 +4,71 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiExample
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular import openapi
 from django.db import transaction
 from django.contrib.auth import login, authenticate
 from utils.match_face import FaceMatch
 from utils.facial_processing import FacialProcessing
-from .models import UserProfile
+from .models import UserProfile, UserEmbeddings
 from .forms import EmailLoginForm
-from .serializers import UserProfileSerializer, EmailLoginSerializer, FacialRecognitionLoginSerializer
-
+from .serializers import (
+    UserProfileSerializer, 
+    EmailLoginSerializer, 
+    FacialRecognitionLoginSerializer, 
+    UserEmbeddingsSerializer, 
+    UserEmbeddingsCreateSerializer
+)
+import tempfile
+import os
+from rest_framework.exceptions import ValidationError
 
 class UserSignUpAPIView(APIView):
     permission_classes = [AllowAny]
+
     @extend_schema(
         request={
-            'multipart/form-data':{
-                'type':'object',
-                'properties':{
-                    'username': {
-                        'type': 'string',
-                        'description': 'Username for the new user. Must be unique.'
-                        },
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
                     'first_name': {
                         'type': 'string',
                         'description': 'First name of the new user.'
-                        },
+                    },
                     'last_name': {
                         'type': 'string',
                         'description': 'Last name of the new user.'
-                        },
+                    },
                     'email': {
                         'type': 'string', 
                         'format': 'email',
                         'description': 'Email address of the new user. Must be unique.'
-                        },
+                    },
                     'password': {
                         'type': 'string',
                         'format': 'password',
                         'description': 'Password for the new user.'
-                        },
+                    },
                     'age': {
                         'type': 'integer',
                         'description': 'Age of the new user. Must be an integer.'
-                        },
+                    },
                     'preferences': {
                         'type': 'string',
                         'description': 'Food Preferences of User',
-                        },
-                    'image': {
-                        'type': 'string', 
-                        'format': 'binary',
-                        'description':'Face Image Uploaded by User'},
-                    }
+                    },
                 }
             }
-        ,
+        },
         responses={201: UserProfileSerializer},
         description="Register a new user and their facial data for recognition.",
-        # parameters=[
-        #     OpenApiParameter(
-        #         name='image', 
-        #         description='Upload user image', 
-        #         required=True, 
-        #         type=OpenApiTypes.BINARY, 
-        #     ),
-        # # ],
         examples=[
             OpenApiExample(
                 "Example 1",
                 summary="Example of a valid request",
                 description="This is what a valid request might look like",
                 value={
-                    "username": "john_doe",
                     "first_name": "John",
                     "last_name": "Doe",
                     "email": "john.doe@example.com",
@@ -98,28 +89,135 @@ class UserSignUpAPIView(APIView):
                     user.set_password(request.data["password"])
                     user.save()
 
-                    # Assuming your UserImageSerializer saves the image and links it to the user
-                    processor = FacialProcessing()
-                    image = request.FILES.get("image")
-                    if not image:
-                        raise ValueError("Face is needed for signup")
-
-                    results = processor.process_user_images(image, user.id)
-
-                    if all(result['status'] == 'success' for result in results):
-                        token, _ = Token.object.get_or_create(user=user)
-                        return Response({
-                            'status': 'Success',
-                            'message': 'User and facial data registered successfully',
-                            'token_key': token.key
-                        }, status=status.HTTP_201_CREATED)
-                    raise Exception('Facial processing errors')
+                    token, _ = Token.objects.get_or_create(user=user)  # Corrected 'object' to 'objects'
+                    return Response({
+                        'status': 'Success',
+                        'message': 'User data registered successfully',
+                        'token_key': token.key
+                    }, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({
                     'status': 'Error',
                     'message': str(e)
                 }, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserEmbeddingsSetupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        description="Setup facial embeddings for the authenticated user.",
+        request={
+            'multipart/form-data': {
+                'type': 'object',
+                'properties': {
+                    'image': {
+                        'type': 'string', 
+                        'format': 'binary',
+                        'description':'Face Image Uploaded by User'
+                    },
+                }
+            }
+        },
+        responses={
+            200: {
+                'description': 'Embeddings setup successful',
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'status': 'Success',
+                            'message': 'Embeddings setup successful'
+                        }
+                    }
+                }
+            },
+            400: {
+                'description': 'Invalid or missing embeddings',
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'status': 'Error',
+                            'message': 'Invalid or missing embeddings'
+                        }
+                    }
+                }
+            }
+        },
+        examples=[
+            OpenApiExample(
+                name="Embeddings Setup Example",
+                summary="Example of setting up facial embeddings for the user.",
+                description="A valid example showing how to set up facial embeddings for the user.",
+                value={
+                    "image": "path/to/your/image.jpg"
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name="Successful Embeddings Setup Response",
+                summary="Successful embeddings setup response.",
+                description="Response returned after successfully setting up facial embeddings for the user.",
+                value={
+                    "status": "Success",
+                    "message": "Embeddings setup successful"
+                },
+                response_only=True
+            )
+        ]
+    )
+    def post(self, request, *args, **kwargs):
+        # Importing inside the method to avoid potential circular imports
+        from rest_framework.parsers import MultiPartParser, FormParser
+        request.parser_classes = [MultiPartParser, FormParser]
+
+        image = request.FILES.get("image")
+        if not image:
+            return Response({
+                'status': 'Error',
+                'message': 'Image file is required.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        face_processor = FacialProcessing()
+
+        try:
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                for chunk in image.chunks():
+                    temp_file.write(chunk)
+                temp_file.flush()
+                image_path = temp_file.name
+
+            embeddings = face_processor.extract_embeddings_vgg(image_path)
+            if not embeddings:
+                raise ValidationError("Failed to process face.")
+
+            # Remove the temporary file after processing
+            os.remove(image_path)
+
+            # Save embeddings
+            embeddings_serializer = UserEmbeddingsCreateSerializer(data={'embeddings': embeddings})
+            if embeddings_serializer.is_valid():
+                embeddings_instance = embeddings_serializer.save(user=request.user)
+                return Response(
+                    {
+                        'status': 'Success',
+                        'message': 'Embeddings setup successful'
+                    }, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    'status': 'Error',
+                    'message': 'Invalid or missing embeddings'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as ve:
+            return Response({
+                'status': 'Error',
+                'message': str(ve)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'status': 'Error',
+                'message': 'An unexpected error occurred.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class EmailLoginAPIView(APIView):
@@ -130,30 +228,31 @@ class EmailLoginAPIView(APIView):
         request=EmailLoginSerializer,
         responses={
             200: {
-                'desrciption':'Login Successful', 
+                'description':'Login Successful', 
                 'content':{
-                'application/json': {
-                    'example': {
-                        'status': 'Success',
-                        'message': 'Login successful'
+                    'application/json': {
+                        'example': {
+                            'status': 'Success',
+                            'message': 'Login successful',
+                            'token': 'your_token'
+                        }
                     }
                 }
-            }
             },
             400: {
                 'description':'Invalid Credentials or Bad Request', 
                 'content':{
-                'application/json': {
-                    'example': {
-                        'status': 'Error',
-                        'message': 'Invalid credentials'
-                    },
-                    'example2': {
-                        'status': 'Error',
-                        'message': 'This field is required.'
+                    'application/json': {
+                        'example': {
+                            'status': 'Error',
+                            'message': 'Invalid credentials'
+                        },
+                        'example2': {
+                            'status': 'Error',
+                            'message': 'This field is required.'
+                        }
                     }
                 }
-            }
             }
         },
         examples=[
@@ -179,19 +278,19 @@ class EmailLoginAPIView(APIView):
     )
     
     def post(self, request, *args, **kwargs):
-        serializer = EmailLoginSerializer(request.data)
+        serializer = EmailLoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             password = serializer.validated_data.get('password')
             user = authenticate(request, username=email, password=password)
             if user:
-                token, _ = Token.object.get_or_create(user=user)
+                token, _ = Token.objects.get_or_create(user=user)
                 return Response(
                     {
                         'status': 'Success',
                         'message': 'Login successful',
-                        'token':token.key
-                        }, status=status.HTTP_200_OK)
+                        'token': token.key
+                    }, status=status.HTTP_200_OK)
             return Response({'status': 'Error', 'message': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -221,7 +320,8 @@ class FacialRecognitionLoginAPIView(APIView):
                         'example': {
                             'status': 'Success',
                             'message': 'Login successful',
-                            'user_id': '123'
+                            'user_id': '123',
+                            'token': 'your_token'
                         }
                     }
                 }
@@ -250,14 +350,6 @@ class FacialRecognitionLoginAPIView(APIView):
                 }
             }
         },
-        # parameters=[
-        #     OpenApiParameter(
-        #         name='image', 
-        #         description='Upload user image', 
-        #         required=True, 
-        #         type=OpenApiTypes.BINARY,
-        #     ),
-        # ],
         examples=[
             OpenApiExample(
                 name="Submit Image for Facial Recognition",
@@ -275,7 +367,8 @@ class FacialRecognitionLoginAPIView(APIView):
                 value={
                     "status": "Success",
                     "message": "Login successful",
-                    "user_id": "123"
+                    "user_id": "123",
+                    "token": "your_token"
                 },
                 response_only=True
             ),
@@ -293,9 +386,11 @@ class FacialRecognitionLoginAPIView(APIView):
     )
 
     def post(self, request, *args, **kwargs):
+        from rest_framework.parsers import MultiPartParser, FormParser
+        request.parser_classes = [MultiPartParser, FormParser]
+        
         image_serializer = FacialRecognitionLoginSerializer(data=request.data)
         if image_serializer.is_valid():
-            image_instance = image_serializer.save(commit=False)
             image_file = request.FILES.get('image')
 
             if image_file:
@@ -304,14 +399,21 @@ class FacialRecognitionLoginAPIView(APIView):
 
                 if match_result['status'] == 'Success':
                     user_id = match_result['user_id']
-                    user = UserProfile.objects.get(pk=user_id)
-                    token, _ = Token.object.get_or_create(user=user)
-                    return Response(
-                        {
-                            'status': 'Success',
-                            'message': 'Login successful',
-                            'token': token.key
+                    try:
+                        user = UserProfile.objects.get(pk=user_id)
+                        token, _ = Token.objects.get_or_create(user=user)
+                        return Response(
+                            {
+                                'status': 'Success',
+                                'message': 'Login successful',
+                                'user_id': user_id,
+                                'token': token.key
                             }, status=status.HTTP_200_OK)
+                    except UserProfile.DoesNotExist:
+                        return Response({
+                            'status': 'Error',
+                            'message': 'User not found.'
+                        }, status=status.HTTP_400_BAD_REQUEST)
                 return Response({'status': 'Error', 'message': match_result['message']}, status=status.HTTP_400_BAD_REQUEST)
             return Response({'status': 'Error', 'message': 'No image file provided'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(image_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -349,13 +451,11 @@ class UserProfileAPIView(APIView):
                 summary="Example of a user profile update request.",
                 description="A valid example showing how to update user profile data.",
                 value={
-                    "username": "updated_username",
                     "first_name": "John",
                     "last_name": "Doe",
                     "email": "updated@example.com",
                     "age": 30,
                     "preferences": "Updated preferences",
-                    "image": "path/to/updated/image.jpg"
                 },
                 request_only=True
             ),
@@ -365,13 +465,11 @@ class UserProfileAPIView(APIView):
                 description="Response returned after successfully updating the user profile.",
                 value={
                     "id": 1,
-                    "username": "updated_username",
                     "first_name": "John",
                     "last_name": "Doe",
                     "email": "updated@example.com",
                     "age": 30,
-                    "preferences": "Updated preferences",
-                    "image": "path/to/updated/image.jpg"
+                    "preferences": "Updated preferences"
                 },
                 response_only=True
             )
@@ -387,4 +485,3 @@ class UserProfileAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except UserProfile.DoesNotExist:
             return Response({'status': 'Error', 'message': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-
